@@ -102,11 +102,8 @@ class MusicBot(discord.Client):
         log.info(f'Establishing connection to MongoDB database {self.database_name}')
 
         self.mclient = MongoClient()
-        self.db = mclient[self.database_name]
-        self.dbservers = db.servers
-
-        for server in self.servers:
-            self._check_document(server, server.id)
+        self.db = self.mclient[self.database_name]
+        self.dbservers = self.db.servers
 
         self._setup_logging()
 
@@ -262,7 +259,7 @@ class MusicBot(discord.Client):
             dhandler.setFormatter(logging.Formatter('{asctime}:{levelname}:{name}: {message}', style='{'))
             dlogger.addHandler(dhandler)
 
-    def _initialize_document(server, id):
+    def _initialize_document(self, server, id):
         users = set()
         for member in server.members:
             for group in permissions.groups:
@@ -280,8 +277,8 @@ class MusicBot(discord.Client):
                 'slowmode': false}
         dbservers.insert_one(post)
 
-    def _check_document(server, id):
-        if dbservers.find_one(id) == None:
+    def _check_document(self, server, id):
+        if self.dbservers.find_one(id) == None:
             self._initialize_document(id)
 
     @staticmethod
@@ -1147,6 +1144,9 @@ class MusicBot(discord.Client):
                 print()
 
         log.debug("Connection established, ready to go.")
+
+        for server in self.servers:
+            self._check_document(server, server.id)
 
         self.ws._keep_alive.name = 'Gateway Keepalive'
 
