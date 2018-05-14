@@ -1325,8 +1325,6 @@ class MusicBot(discord.Client):
         Hug somebody!
         If no recipient is specified, Sigma-chan will hug you <3
         """
-        thumbnail = os.path.join('data/gifs/', random.choice(os.listdir(GIF_CACHE_PATH)))
-        time.sleep(.2) #welcome to jenky solutions part 10
         #thumbnail = os.path.join('data/gifs/', random.choice(os.listdir(GIF_CACHE_PATH)))
         #time.sleep(.2) #welcome to jenky solutions part 10
 
@@ -1346,14 +1344,18 @@ class MusicBot(discord.Client):
         else:
             msg = self.user.name + " gives %s a soft hug <:heartmodern:328603582993661982>" % (author.mention)
 
-        await self.safe_send_message(channel, msg)
-        
-        '''params = {'api_key' = '', 'tag' = 'hug'}
         async with aiohttp.ClientSession() as session:
-        async with session.get('https://api.giphy.com/v1/gifs/random', params=params) as resp:
-           do something with the thing idk'''
-
-        await self.safe_send_file(channel, None, thumbnail, expire_in=30)
+            async with session.get('https://nekos.life/api/v2/img/hug') as resp:
+                rjson = await resp.json()
+                content = discord.Embed(colour=0x1abc9c)
+                content.set_footer(text="Sugoi!")
+                url = rjson.get('url')
+                #something something 2 positional parameters so i have to do this extra variable assignment
+                content.set_image(url=url)
+                content.description = msg
+                await self.safe_send_message(channel, content, expire_in=45)    
+    
+        
 
     async def cmd_yikes(self, message):
         return Response("Yikes! 😬", reply=False, delete_after=30)
@@ -1403,7 +1405,7 @@ class MusicBot(discord.Client):
             return Response("Autorole disabled", reply=False, delete_after=20)
         #print(self.autorole)
 
-    async def cmd_purge(self, channel, message, user_mentions, leftover_args, usermentions, num= None):
+    async def cmd_purge(self, channel, message, user_mentions, leftover_args, num = None, usermentions = None):
         """
         Usage:
             {command_prefix}purge [number]
@@ -1420,7 +1422,7 @@ class MusicBot(discord.Client):
                     except ValueError:
                         raise exceptions.CommandError("Invalid number specified.", expire_in=20)
 
-                    deleted = await self.purge_from(channel, limit=num, check=user_check)
+                    deleted = await self.purge_from(channel, limit=num+1, check=user_check)
                     msg = "The last {} messages by {} were purged".format(len(deleted), user.name)
                     return Response(msg, reply=False, delete_after=20)
         if num:
@@ -2099,24 +2101,27 @@ class MusicBot(discord.Client):
             {command_prefix}stats
         Displays bot stats.
         """
-        msg = self._gen_embed()
-        msg.set_thumbnail(url=self.user.avatar_url)
-        msg.add_field(name="Author", value="Neon#4792")
-        msg.add_field(name="BotID", value=self.user.id)
-        msg.add_field(name="Songs Played", value=player.songs_played)
-        msg.add_field(name="Messages", value=str(self.message_count) + ' (' + '%.2f'%(self.message_count / (time.time()-self.uptime)) +'/sec)')
+        content = discord.Embed(colour=0x1abc9c)
+        content.set_author(name="Sigma v" + BOTVERSION, icon_url=self.user.avatar_url)
+        content.set_footer(text="Sugoi!")
+        content.set_thumbnail(url=self.user.avatar_url)
+        content.add_field(name="Author", value="Neon#4792")
+        content.add_field(name="BotID", value=self.user.id)
+        content.add_field(name="Songs Played", value=player.songs_played)
+        content.add_field(name="Messages", value=str(self.message_count) + ' (' + '%.2f'%(self.message_count / (time.time()-self.uptime)) +'/sec)')
         process = psutil.Process(os.getpid())
         mem = process.memory_full_info()
         mem = mem.uss / 1000000
-        msg.add_field(name="Memory Usage", value='%.2f'%(mem) + "MB")
+        content.add_field(name="Memory Usage", value='%.2f'%(mem) + "MB")
         ctime = float(time.time()-self.uptime)
         day = ctime // (24 * 3600)
         ctime = ctime % (24 * 3600)
         hour = ctime // 3600
         ctime %= 3600
         minutes = ctime // 60
-        msg.add_field(name="Uptime", value="%d days\n%d hours\n%d minutes" % (day, hour, minutes))
-        await self.safe_send_message(channel, msg, expire_in=60)
+        content.add_field(name="Uptime", value="%d days\n%d hours\n%d minutes" % (day, hour, minutes))
+        content.add_field(name="Servers", value="I am currently running on " + len(self.servers))
+        await self.safe_send_message(channel, content, expire_in=60)
 
     async def cmd_kick(self, message, server, mentions):
         #do something here
