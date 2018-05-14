@@ -2133,7 +2133,7 @@ class MusicBot(discord.Client):
         if time:
             if time.lower() == "off":
                 await self.dbservers.update_one({"server_id": server.id}, {"$set": {'slowmode': 0}})
-                await self.db.drop_collection('messages')
+                await self.dbservers.delete_many({"server_id": server.id})
                 return Response("Slowmode has been disabled", reply=False, delete_after=30)
             else:
                 try:
