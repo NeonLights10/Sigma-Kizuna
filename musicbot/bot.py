@@ -20,6 +20,7 @@ import psutil
 import aiohttp
 import discord
 import colorlog
+import motor.motor_asyncio
 
 from io import BytesIO, StringIO
 from functools import wraps
@@ -101,9 +102,10 @@ class MusicBot(discord.Client):
 
         log.info(f'Establishing connection to MongoDB database {self.database_name}')
 
-        self.mclient = MongoClient()
+        self.mclient = motor.motor_asyncio.AsyncIOMotorClient()
         self.db = self.mclient[self.database_name]
         self.dbservers = self.db.servers
+        self.dbmessages = self.db.messages
 
         self._setup_logging()
 
@@ -259,27 +261,27 @@ class MusicBot(discord.Client):
             dhandler.setFormatter(logging.Formatter('{asctime}:{levelname}:{name}: {message}', style='{'))
             dlogger.addHandler(dhandler)
 
-    def _initialize_document(self, server, id):
-        users = set()
+    async def _initialize_document(self, server, id):
+        users = []
         for member in server.members:
-            for group in permissions.groups:
+            for group in self.permissions.groups:
                 if "Moderator" == group.name:
                     moderator = group
                 if "Admin" == group.name:
                     admin = group
             for role in member.roles:
-                if role.id in moderator.granted_to_roles or member.id in admin.user_list:
-                    users.add(member)
+                if role.id in moderator.granted_to_roles or member.id in admin.user_list and role.id not in users:
+                    users.append(member.id)
         post = {'server_id': id,
                 'autorole': None,
                 'admins': users,
-                'muted': set(),
-                'slowmode': false}
-        dbservers.insert_one(post)
+                'muted': [],
+                'slowmode': False}
+        await self.dbservers.insert_one(post)
 
-    def _check_document(self, server, id):
-        if self.dbservers.find_one(id) == None:
-            self._initialize_document(id)
+    async def _check_document(self, server, id):
+        if await self.dbservers.find_one({"server_id": id}) == None:
+           await self._initialize_document(server, id)
 
     @staticmethod
     def _check_if_empty(vchannel: discord.Channel, *, excluding_me=True, excluding_deaf=False):
@@ -1146,7 +1148,8 @@ class MusicBot(discord.Client):
         log.debug("Connection established, ready to go.")
 
         for server in self.servers:
-            self._check_document(server, server.id)
+            #log.info(server.id)
+            await self._check_document(server, server.id)
 
         self.ws._keep_alive.name = 'Gateway Keepalive'
 
@@ -1353,10 +1356,8 @@ class MusicBot(discord.Client):
                 #something something 2 positional parameters so i have to do this extra variable assignment
                 content.set_image(url=url)
                 content.description = msg
-                await self.safe_send_message(channel, content, expire_in=45)    
+                return Response(content, reply=False, expire_in=45)    
     
-        
-
     async def cmd_yikes(self, message):
         return Response("Yikes! 😬", reply=False, delete_after=30)
 
@@ -1937,10 +1938,6 @@ class MusicBot(discord.Client):
                 reply_text = "Substituted **%s** with **%s** at position %s"
                 btext1 = old_entry.title
                 btext2 = entry.title
-<<<<<<< HEAD
-=======
-
->>>>>>> master
 
             if position == 1 and player.is_stopped:
                 position = self.str.get('cmd-play-next', 'Up next!')
@@ -2032,7 +2029,7 @@ class MusicBot(discord.Client):
         else:
             raise exceptions.CommandError("No team specified!")
 
-    async def cmd_addmember(self, message, server, role_mentions, leftover_args):
+    async def cmd_addmember(self, message, server, role_mentions, mentions, leftover_args):
         """
         Usage:
             {command_prefix}addmember <user mentions> (role mentions) (role name)
@@ -2120,12 +2117,38 @@ class MusicBot(discord.Client):
         ctime %= 3600
         minutes = ctime // 60
         content.add_field(name="Uptime", value="%d days\n%d hours\n%d minutes" % (day, hour, minutes))
-        content.add_field(name="Servers", value="I am currently running on " + len(self.servers))
+        content.add_field(name="Servers", value="I am currently running on " + str(len(self.servers)))
         await self.safe_send_message(channel, content, expire_in=60)
 
-    async def cmd_kick(self, message, server, mentions):
-        #do something here
-        pass
+    async def cmd_kick(self, message, server, user_mentions):
+        for user in user_mentions:
+            if user != self.user:
+                try:
+                    await self.kick(user)
+                except:
+                    raise exceptions.CommandError("Something went wrong!")
+            else:
+                raise exceptions.CommandError("Uhh, I can't kick myself...")
+    
+    async def cmd_slowmode(self, server, time=None):
+        if time:
+            if time.lower() == "off":
+                document = await self.dbservers.find_one({"server_id": server.id})
+                document['slowmode'] = 0
+                await self.dbservers.replace_one({"server_id": server.id}, document)
+                await self.db.drop_collection('messages')
+                return Response("Slowmode has been disabled", reply=False, delete_after=30)
+            else:
+                try:
+                    time = int(time)
+                except ValueError:
+                    raise exceptions.CommandError("Invalid number specified.", expire_in=20)
+                document = await self.dbservers.find_one({"server_id": server.id})
+                document['slowmode'] = time
+                await self.dbservers.replace_one({"server_id": server.id}, document)
+                return Response("Slowmode has been enabled in " + server.name, reply=False, delete_after=30)
+
+##########################################################################################################
 
     async def cmd_resetplaylist(self, player, channel):
         """
@@ -3607,6 +3630,7 @@ class MusicBot(discord.Client):
     async def on_message(self, message):
         await self.wait_until_ready()
         self.message_count += 1
+        current_timestamp = datetime.datetime.utcnow()
 
         message_content = message.content.strip()
 
@@ -3616,6 +3640,38 @@ class MusicBot(discord.Client):
             botsay = random.choice(msg)
 
             await self.safe_send_message(message.channel, botsay)
+
+        #let's deal with slowmode stuff before we deal with any commands
+        try:
+            document = await self.dbservers.find_one({"server_id": message.server.id})
+        except:
+            #something something weird bug so i have to silence it 
+            document = None
+        #is slowmode on?
+        if document and document['slowmode'] != 0:
+            #Check if the user who sent the message should be affected by slowmode
+            if message.author.id not in document['admins'] and message.author.id != self.user.id:
+                messagedoc = await self.dbmessages.find_one({"server_id": message.server.id, "user": message.author.id})
+                #Have they talked during slowmode? If so, let's check the timestamp. If not, add them to the list.
+                if messagedoc:
+                    if (current_timestamp - messagedoc['timestamp']).seconds <= document['slowmode']:
+                        log.info("A message was deleted due to slow mode.")
+                        await self.safe_send_message(message.author, "Your message ``` " + message.content + "``` was deleted because the server is currently in slow mode. Please wait " + str((current_timestamp - messagedoc['timestamp']).seconds) + " seconds before trying to send a message again.")
+                        def user_check(m):
+                            return m.author == message.author
+                        await self.purge_from(message.channel, after=messagedoc['timestamp'], check=user_check)
+                        return
+                    else:
+                        #The timer has passed so they can speak, but let's restart it
+                        messagedoc['timestamp'] = current_timestamp
+                        await self.dbmessages.replace_one({"server_id": message.server.id, "user": message.author.id}, messagedoc)
+                else:
+                    #Let's create a new timestamp entry for this user.
+                    log.info("Setting up new message")
+                    messagedoc={'server_id': message.server.id,
+                                'user': message.author.id,
+                                'timestamp': current_timestamp}
+                    await self.dbmessages.insert_one(messagedoc)
 
         if not message_content.startswith(self.config.command_prefix):
             return
