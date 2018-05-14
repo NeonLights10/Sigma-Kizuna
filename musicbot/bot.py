@@ -1345,7 +1345,7 @@ class MusicBot(discord.Client):
             #    'You are trying to hug too many people at once! Take it once at a time, please <3' , expire_in=20
             #)
         else:
-            msg = self.user.name + " gives %s a soft hug <:heartmodern:328603582993661982>" % (author.mention)
+            msg = self.user.name + " gives %s a soft hug <:heart:>" % (author.mention)
 
         async with aiohttp.ClientSession() as session:
             async with session.get('https://nekos.life/api/v2/img/hug') as resp:
@@ -3653,7 +3653,13 @@ class MusicBot(discord.Client):
                 if messagedoc:
                     if (current_timestamp - messagedoc['timestamp']).seconds <= document['slowmode']:
                         log.info("A message was deleted due to slow mode.")
-                        await self.safe_send_message(message.author, "Your message ``` " + message.content + "``` was deleted because the server is currently in slow mode. Please wait " + str((current_timestamp - messagedoc['timestamp']).seconds) + " seconds before trying to send a message again.")
+                        if messagedoc['last_PM']:
+                            if (current_timestamp - messagedoc['last_PM'] > 300):
+                                await self.safe_send_message(message.author, "Your messages have been removed. The server is currently in slow mode. Please wait " + str((current_timestamp - messagedoc['timestamp']).seconds) + " seconds before trying to send a message again.")
+                                await self.dbmessages.update_one({"server_id": message.server.id, "user": message.author.id}, {"$set": {'last_PM': current_timestamp}})
+                        else:
+                            await self.safe_send_message(message.author, "Your messages have been removed. The server is currently in slow mode. Please wait " + str((current_timestamp - messagedoc['timestamp']).seconds) + " seconds before trying to send a message again.")
+                            await self.dbmessages.update_one({"server_id": message.server.id, "user": message.author.id}, {"$set": {'last_PM': current_timestamp}})  
                         def user_check(m):
                             return m.author == message.author
                         await self.purge_from(message.channel, after=messagedoc['timestamp'], check=user_check)
@@ -3666,7 +3672,8 @@ class MusicBot(discord.Client):
                     log.info("Storing new user in message collection")
                     messagedoc={'server_id': message.server.id,
                                 'user': message.author.id,
-                                'timestamp': current_timestamp}
+                                'timestamp': current_timestamp,
+                                'last_PM': None}
                     await self.dbmessages.insert_one(messagedoc)
 
         if not message_content.startswith(self.config.command_prefix):
