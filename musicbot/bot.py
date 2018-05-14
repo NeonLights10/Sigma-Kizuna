@@ -276,7 +276,7 @@ class MusicBot(discord.Client):
                 'autorole': None,
                 'admins': users,
                 'muted': [],
-                'slowmode': False}
+                'slowmode': 0}
         await self.dbservers.insert_one(post)
 
     async def _check_document(self, server, id):
@@ -1356,7 +1356,7 @@ class MusicBot(discord.Client):
                 #something something 2 positional parameters so i have to do this extra variable assignment
                 content.set_image(url=url)
                 content.description = msg
-                return Response(content, reply=False, expire_in=45)    
+                return Response(content, reply=False, delete_after=45)    
     
     async def cmd_yikes(self, message):
         return Response("Yikes! 😬", reply=False, delete_after=30)
@@ -1377,34 +1377,27 @@ class MusicBot(discord.Client):
         msg = "%s rolled a " % author.mention + str(answer)
         return Response(msg, reply=False, delete_after=30)
 
-    #TODO: Make aar persist through shutdown/restart (tough)
-    @owner_only
-    async def cmd_aar(self, channel, server, role=None):
+    async def cmd_aar(self, server, role=None):
         """
         Usage:
             {command_prefix}aar [role]
         Enables auto assign role with a specific role. Server specific.
         Owner only.
         """
-        if role:
+        if role:   
+            if role.lower() == "off":
+                await self.dbservers.update_one({"server_id": server.id}, {"$set": {'autorole': None}})
+                return Response("Autorole disabled", reply=False, delete_after=20)
             #Let's find the role
             role = discord.utils.find(lambda r: r.name == role, server.roles)
             if role:
-                self.autorole[server] = role
-                self.autoassignrole = True
-                return Response("Enabled autorole in %s with role %s" % (server,role), reply=False, delete_after=20)
-
+                await self.dbservers.update_one({"server_id": server.id}, {"$set": {'autorole': role.name}})
+                return Response("Enabled autorole in %s using role %s" % (server,role), reply=False, delete_after=20)
             else:
                 #oops, can't find that role. Try again
                 raise exceptions.CommandError("Invalid role specified.", expire_in=20)
-
-        elif not self.autoassignrole:
-            raise exceptions.CommandError("Autorole is currently disabled. No role specified.", expire_in=20)
-
-        elif self.autoassignrole:
-            self.autoassignrole = False
-            return Response("Autorole disabled", reply=False, delete_after=20)
-        #print(self.autorole)
+        else:
+            raise exceptions.CommandError("No argument specified.", expire_in=20)
 
     async def cmd_purge(self, channel, message, user_mentions, leftover_args, num = None, usermentions = None):
         """
@@ -1956,11 +1949,17 @@ class MusicBot(discord.Client):
         return Response(reply_text, delete_after=30)
 
     async def on_member_join(self, member):
-        if self.autorole:
-            await self.add_roles(member, self.autorole[member.server])
-            log.info("Added a user")
+        log.info("A new member joined in {}".format(member.server.name))
+        document = await self.dbservers.find_one({"server_id": str(member.server.id)})
+        if document['autorole']:
+            role = discord.utils.find(lambda r: r.name == document['autorole'], member.server.roles)
+            if role:
+                await self.add_roles(member, role)
+                log.info("Auto-assigned role to new member in {}".format(member.server.name))
+            else:
+                raise ValueError("Auto-assign role does not exist!")
         else:
-            log.info("Autorole disabled")
+            raise exceptions.CommandError("AWOOOOO! SOMETHING WENT WRONG")
 
     async def cmd_addrole(self, message, server, mentions, leftover_args):
         """
@@ -2110,6 +2109,7 @@ class MusicBot(discord.Client):
         mem = process.memory_full_info()
         mem = mem.uss / 1000000
         content.add_field(name="Memory Usage", value='%.2f'%(mem) + "MB")
+        content.add_field(name="Servers", value="I am currently running on " + str(len(self.servers)) + " servers")
         ctime = float(time.time()-self.uptime)
         day = ctime // (24 * 3600)
         ctime = ctime % (24 * 3600)
@@ -2117,7 +2117,6 @@ class MusicBot(discord.Client):
         ctime %= 3600
         minutes = ctime // 60
         content.add_field(name="Uptime", value="%d days\n%d hours\n%d minutes" % (day, hour, minutes))
-        content.add_field(name="Servers", value="I am currently running on " + str(len(self.servers)))
         await self.safe_send_message(channel, content, expire_in=60)
 
     async def cmd_kick(self, message, server, user_mentions):
@@ -2133,19 +2132,17 @@ class MusicBot(discord.Client):
     async def cmd_slowmode(self, server, time=None):
         if time:
             if time.lower() == "off":
-                document = await self.dbservers.find_one({"server_id": server.id})
-                document['slowmode'] = 0
-                await self.dbservers.replace_one({"server_id": server.id}, document)
+                await self.dbservers.update_one({"server_id": server.id}, {"$set": {'slowmode': 0}})
                 await self.db.drop_collection('messages')
                 return Response("Slowmode has been disabled", reply=False, delete_after=30)
             else:
                 try:
                     time = int(time)
                 except ValueError:
-                    raise exceptions.CommandError("Invalid number specified.", expire_in=20)
-                document = await self.dbservers.find_one({"server_id": server.id})
-                document['slowmode'] = time
-                await self.dbservers.replace_one({"server_id": server.id}, document)
+                    raise exceptions.CommandError("Invalid argument specified. Did you enter a number?", expire_in=20)
+                if time <= 0:
+                    raise exceptions.CommandError("Invalid time specified! Please give a time in seconds.")
+                await self.dbservers.update_one({"server_id": server.id}, {"$set": {'slowmode': time}})
                 return Response("Slowmode has been enabled in " + server.name, reply=False, delete_after=30)
 
 ##########################################################################################################
@@ -3645,7 +3642,7 @@ class MusicBot(discord.Client):
         try:
             document = await self.dbservers.find_one({"server_id": message.server.id})
         except:
-            #something something weird bug so i have to silence it 
+            #fixes a weird bug but also ensures that a server not in the database doesn't raise exceptions 
             document = None
         #is slowmode on?
         if document and document['slowmode'] != 0:
@@ -3663,11 +3660,10 @@ class MusicBot(discord.Client):
                         return
                     else:
                         #The timer has passed so they can speak, but let's restart it
-                        messagedoc['timestamp'] = current_timestamp
-                        await self.dbmessages.replace_one({"server_id": message.server.id, "user": message.author.id}, messagedoc)
+                        await self.dbmessages.update_one({"server_id": message.server.id, "user": message.author.id}, {"$set": {'timestamp': current_timestamp}})
                 else:
                     #Let's create a new timestamp entry for this user.
-                    log.info("Setting up new message")
+                    log.info("Storing new user in message collection")
                     messagedoc={'server_id': message.server.id,
                                 'user': message.author.id,
                                 'timestamp': current_timestamp}
@@ -3986,7 +3982,6 @@ class MusicBot(discord.Client):
 
             await self.reconnect_voice_client(after)
 
-
     async def on_server_join(self, server:discord.Server):
         log.info("Bot has been joined server: {}".format(server.name))
 
@@ -4003,6 +3998,9 @@ class MusicBot(discord.Client):
 
         log.debug("Creating data folder for server %s", server.id)
         pathlib.Path('data/%s/' % server.id).mkdir(exist_ok=True)
+
+        log.debug("Checking database entry for server {}".format(server.id))
+        self._check_document(server, server.id)
 
     async def on_server_remove(self, server: discord.Server):
         log.info("Bot has been removed from server: {}".format(server.name))
