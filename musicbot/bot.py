@@ -100,7 +100,7 @@ class MusicBot(discord.Client):
         self.aiolocks = defaultdict(asyncio.Lock)
         self.downloader = downloader.Downloader(download_folder='audio_cache')
 
-        log.info(f'Establishing connection to MongoDB database {self.database_name}')
+        log.info('Establishing connection to MongoDB database {}'.format(self.database_name))
 
         self.mclient = motor.motor_asyncio.AsyncIOMotorClient()
         self.db = self.mclient[self.database_name]
