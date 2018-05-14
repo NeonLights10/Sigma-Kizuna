@@ -1327,6 +1327,8 @@ class MusicBot(discord.Client):
         """
         thumbnail = os.path.join('data/gifs/', random.choice(os.listdir(GIF_CACHE_PATH)))
         time.sleep(.2) #welcome to jenky solutions part 10
+        #thumbnail = os.path.join('data/gifs/', random.choice(os.listdir(GIF_CACHE_PATH)))
+        #time.sleep(.2) #welcome to jenky solutions part 10
 
         if user_mentions and len(user_mentions) == 1:
             msg = "%s hugged %s!" % (author.mention, user_mentions[0].mention)
@@ -1933,6 +1935,10 @@ class MusicBot(discord.Client):
                 reply_text = "Substituted **%s** with **%s** at position %s"
                 btext1 = old_entry.title
                 btext2 = entry.title
+<<<<<<< HEAD
+=======
+
+>>>>>>> master
 
             if position == 1 and player.is_stopped:
                 position = self.str.get('cmd-play-next', 'Up next!')
