@@ -1344,7 +1344,7 @@ class MusicBot(discord.Client):
             #    'You are trying to hug too many people at once! Take it once at a time, please <3' , expire_in=20
             #)
         else:
-            msg = self.user.nick + " gives %s a soft hug <:heart:>" % (author.mention)
+            msg = self.user.name + " gives %s a soft hug <:heart:>" % (author.mention)
 
         async with aiohttp.ClientSession() as session:
             async with session.get('https://nekos.life/api/v2/img/hug') as resp:
@@ -2257,7 +2257,7 @@ class MusicBot(discord.Client):
 
         Removes one or more members from one or more roles. You can choose to use either role mentions (to make people angry) or just the name of the role itself.
         """
-         if user_mentions:
+        if user_mentions:
             if message.role_mentions:
                 for role in message.role_mentions:
                     for user in user_mentions:
@@ -2392,7 +2392,7 @@ class MusicBot(discord.Client):
 
         desc = '```\n' + ', '.join(self.commands) + '\n```\n' + self.str.get(
             'cmd-help-response', 'For information about a particular command, run `{}help [command]`\n'
-                                 'For further help, see https://just-some-bots.github.io/MusicBot/').format(self.user.nick, prefix)
+                                 'For further help, see https://just-some-bots.github.io/MusicBot/').format(self.user.name, prefix)
         if not self.is_all:
             desc += self.str.get('cmd-help-all', '\nOnly showing commands you can use, for a list of all commands, run `{}help all`').format(prefix)
 
