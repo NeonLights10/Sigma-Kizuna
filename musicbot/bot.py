@@ -98,15 +98,16 @@ class MusicBot(discord.Client):
 
         self.aiolocks = defaultdict(asyncio.Lock)
         self.downloader = downloader.Downloader(download_folder='audio_cache')
+        self._setup_logging()
 
         log.info('Establishing connection to MongoDB database {}'.format(self.database_name))
 
         self.mclient = motor.motor_asyncio.AsyncIOMotorClient()
         self.db = self.mclient[self.database_name]
+        #log.info(self.db)
         self.dbservers = self.db.servers
+        #log.info(self.dbservers)
         self.dbmessages = self.db.messages
-
-        self._setup_logging()
 
         log.info('Starting MusicBot {}'.format(BOTVERSION))
 
@@ -276,11 +277,15 @@ class MusicBot(discord.Client):
                 'admins': users,
                 'muted': [],
                 'slowmode': 0}
+        log.info("Inserting document")
         await self.dbservers.insert_one(post)
 
     async def _check_document(self, server, id):
+        log.info("Checking for db document")
+        log.info(await self.dbservers.find_one({"server_id": id}))
         if await self.dbservers.find_one({"server_id": id}) == None:
-           await self._initialize_document(server, id)
+            log.info("Did not find, creating one")
+            await self._initialize_document(server, id)
 
     @staticmethod
     def _check_if_empty(vchannel: discord.Channel, *, excluding_me=True, excluding_deaf=False):
@@ -1943,7 +1948,7 @@ class MusicBot(discord.Client):
                     traceback.print_exc()
                     time_until = ''
 
-                reply_text %= (btext, btext2, position, ftimedelta(time_until))
+                reply_text %= (btext1, btext2, position, ftimedelta(time_until))
 
         return Response(reply_text, delete_after=30)
 
@@ -2142,6 +2147,7 @@ class MusicBot(discord.Client):
     async def on_member_join(self, member):
         log.info("A new member joined in {}".format(member.server.name))
         document = await self.dbservers.find_one({"server_id": str(member.server.id)})
+        log.info(document['autorole'])
         if document['autorole']:
             role = discord.utils.find(lambda r: r.name == document['autorole'], member.server.roles)
             if role:
