@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from __future__ import print_function
 
 import os
@@ -200,6 +202,9 @@ def sanity_checks(optional=True):
     # Make our folders if needed
     req_ensure_folders()
 
+    # For rewrite only
+    req_check_deps()
+
     log.info("Required checks passed.")
 
     ## Optional
@@ -258,6 +263,17 @@ def req_ensure_py3():
         bugger_off()
 
 
+def req_check_deps():
+    try:
+        import discord
+        if discord.version_info.major < 1:
+            log.critical("This version of MusicBot requires a newer version of discord.py (1.0+). Your version is {0}. Try running update.py.".format(discord.__version__))
+            bugger_off()
+    except ImportError:
+        # if we can't import discord.py, an error will be thrown later down the line anyway
+        pass
+
+
 def req_ensure_encoding():
     log.info("Checking console encoding")
 
@@ -277,9 +293,9 @@ def req_ensure_encoding():
 def req_ensure_env():
     log.info("Ensuring we're in the right environment")
 
-    if os.environ.get('APP_ENV') != 'docker' and not os.path.isdir(b64decode('LmdpdA==').decode('utf-8')):
-        log.critical(b64decode('Qm90IHdhc24ndCBpbnN0YWxsZWQgdXNpbmcgR2l0LiBSZWluc3RhbGwgdXNpbmcgaHR0cDovL2JpdC5seS9tdXNpY2JvdGRvY3Mu').decode('utf-8'))
-        bugger_off()
+    #if os.environ.get('APP_ENV') != 'docker' and not os.path.isdir(b64decode('LmdpdA==').decode('utf-8')):
+     #   log.critical(b64decode('Qm90IHdhc24ndCBpbnN0YWxsZWQgdXNpbmcgR2l0LiBSZWluc3RhbGwgdXNpbmcgaHR0cDovL2JpdC5seS9tdXNpY2JvdGRvY3Mu').decode('utf-8'))
+      #  bugger_off()
 
     try:
         assert os.path.isdir('config'), 'folder "config" not found'
@@ -331,6 +347,10 @@ def main():
     finalize_logging()
 
     import asyncio
+
+    if sys.platform == 'win32':
+        loop = asyncio.ProactorEventLoop()  # needed for subprocesses
+        asyncio.set_event_loop(loop)
 
     tried_requirementstxt = False
     tryagain = True

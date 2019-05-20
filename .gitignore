@@ -11,9 +11,8 @@ logs/
 data/
 config/options.ini
 config/permissions.ini
+config/aliases.json
 config/autoplaylist.txt
 config/autoplaylist_removed.txt
 config/whitelist.txt
 config/blacklist.txt
-config/options.ini
-config/options.ini
