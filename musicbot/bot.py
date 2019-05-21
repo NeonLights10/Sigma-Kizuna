@@ -1228,10 +1228,35 @@ class MusicBot(discord.Client):
                     msg += "{0}, ".format(user_mentions[i].mention)
             msg += "and {0}".format(user_mentions[len(user_mentions) - 1].mention)
         else:
-            msg = self.user.name + " gives {} a soft hug <:heart:>".format(author.mention)
+            msg = self.user.name + " gives {} a soft hug :heart:".format(author.mention)
 
+        _cmd_get_gif("hug", msg)
+
+    async def cmd_headpat(self, channel, author, user_mentions):
+        """
+        Usage:
+            {command_prefix}headpat [recipient]
+        Hug somebody!
+        If no recipient is specified, Sigma-chan will pat you <3
+        """
+        if user_mentions and len(user_mentions) == 1:
+            msg = "{0} gave {1} a headpat!".format(author.mention, user_mentions[0].mention)
+        elif user_mentions and len(user_mentions) > 1:
+            msg = "{0} gave ".format(author.mention)
+            if len(user_mentions) == 2:
+                msg += "{0} ".format(user_mentions[0].mention)
+            else:
+                for i in range(len(user_mentions) - 1):
+                    msg += "{0}, ".format(user_mentions[i].mention)
+            msg += "and {0} a headpat".format(user_mentions[len(user_mentions) - 1].mention)
+        else:
+            msg = self.user.name + " gives {} a small headpat :heart:".format(author.mention)
+
+        _cmd_get_gif("pat", msg)
+
+    async def _cmd_get_gif(self, type, msg) {
         async with aiohttp.ClientSession() as session:
-            async with session.get('https://nekos.life/api/v2/img/hug') as resp:
+            async with session.get('https://nekos.life/api/v2/img/{}'.format(type)) as resp:
                 rjson = await resp.json()
                 content = discord.Embed(colour=0x1abc9c)
                 content.set_footer(text="Sugoi!")
@@ -1240,6 +1265,7 @@ class MusicBot(discord.Client):
                 content.set_image(url=url)
                 content.description = msg
                 return Response(content, reply=False, delete_after=45)
+    }
 
     async def cmd_yikes(self, message):
         return Response("Yikes! 😬", reply=False, delete_after=30)
