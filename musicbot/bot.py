@@ -1245,6 +1245,52 @@ class MusicBot(discord.Client):
         content = await self._cmd_get_gif("hug", msg)
         return Response(content, reply=False, delete_after=45)
 
+    async def cmd_cuddle(self, channel, author, user_mentions):
+        """
+        Usage:
+            {command_prefix}cuddle [recipient]
+        Hug somebody!
+        If no recipient is specified, Sigma-chan will cuddle you <3
+        """
+        if user_mentions and len(user_mentions) == 1:
+            msg = "{0} cuddles {1}!".format(author.mention, user_mentions[0].mention)
+        elif user_mentions and len(user_mentions) > 1:
+            msg = "{0} cuddles ".format(author.mention)
+            if len(user_mentions) == 2:
+                msg += "{0} ".format(user_mentions[0].mention)
+            else:
+                for i in range(len(user_mentions) - 1):
+                    msg += "{0}, ".format(user_mentions[i].mention)
+            msg += "and {0}".format(user_mentions[len(user_mentions) - 1].mention)
+        else:
+            msg = self.user.name + " takes a minute to cuddle {} :heart:".format(author.mention)
+
+        content = await self._cmd_get_gif("cuddle", msg)
+        return Response(content, reply=False, delete_after=45)
+
+    async def cmd_poke(self, channel, author, user_mentions):
+        """
+        Usage:
+            {command_prefix}poke [recipient]
+        Hug somebody!
+        If no recipient is specified, Sigma-chan will poke you :P
+        """
+        if user_mentions and len(user_mentions) == 1:
+            msg = "{0} poked {1}!".format(author.mention, user_mentions[0].mention)
+        elif user_mentions and len(user_mentions) > 1:
+            msg = "{0} poked ".format(author.mention)
+            if len(user_mentions) == 2:
+                msg += "{0} ".format(user_mentions[0].mention)
+            else:
+                for i in range(len(user_mentions) - 1):
+                    msg += "{0}, ".format(user_mentions[i].mention)
+            msg += "and {0}".format(user_mentions[len(user_mentions) - 1].mention)
+        else:
+            msg = self.user.name + " pokes you :stuck_out_tongue_closed_eyes:"
+
+        content = await self._cmd_get_gif("poke", msg)
+        return Response(content, reply=False, delete_after=45)
+
     async def cmd_headpat(self, channel, author, user_mentions):
         """
         Usage:
@@ -3748,7 +3794,8 @@ class MusicBot(discord.Client):
 
         message_content = message.content.strip()
 
-        if int("281807963147075584") in message.raw_mentions and message.author != self.user:  
+        if int("281807963147075584") in message.raw_mentions and message.author != self.user:
+            log.info("Found a mention of myself")  
             parsedmessage = re.sub('<@!?\d{18}>', '', message_content).strip()
             msg = ["Hello!", "Hiya!", "Hi <3", "Did someone say my name?", "That's my name!", "You called for me?", "What's up, %s?" % message.author.mention, "Boo.", "Hi there, %s. Need me to kill anyone?" % message.author.mention]
             botsay = random.choice(msg)
