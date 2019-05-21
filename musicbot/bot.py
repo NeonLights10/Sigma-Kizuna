@@ -65,7 +65,7 @@ def find_key(dic, val):
 class MusicBot(discord.Client):
     def __init__(self, config_file=None, perms_file=None, aliases_file=None):
         try:
-            sys.stdout.write("\x1b]2;MusicBot {}\x07".format(BOTVERSION))
+            sys.stdout.write("\x1b]2;Sigma {}\x07".format(BOTVERSION))
         except:
             pass
 
@@ -115,7 +115,7 @@ class MusicBot(discord.Client):
         self.dbservers = self.db.servers
         self.dbmessages = self.db.messages
 
-        log.info('Starting MusicBot {}'.format(BOTVERSION))
+        log.info('Starting Sigma {}'.format(BOTVERSION))
 
         if not self.autoplaylist:
             log.warning("Autoplaylist is empty, disabling.")
@@ -1541,9 +1541,9 @@ class MusicBot(discord.Client):
     async def cmd_removerole(self, message, author, role_mentions):
         """
         Usage:
-            {command_prefix}removeteam <role mention>
+            {command_prefix}removerole <role mention>
 
-        Removes a team completely
+        Removes a role completely
         """
         if message.role_mentions:
             for role in message.role_mentions:
@@ -3720,7 +3720,7 @@ class MusicBot(discord.Client):
 
         message_content = message.content.strip()
 
-        if "281807963147075584" in message.raw_mentions and message.author != self.user:  
+        if int("281807963147075584") in message.raw_mentions and message.author != self.user:  
             parsedmessage = re.sub('<@!?\d{18}>', '', message_content).strip()
             msg = ["Hello!", "Hiya!", "Hi <3", "Did someone say my name?", "That's my name!", "You called for me?", "What's up, %s?" % message.author.mention, "Boo.", "Hi there, %s. Need me to kill anyone?" % message.author.mention]
             botsay = random.choice(msg)
