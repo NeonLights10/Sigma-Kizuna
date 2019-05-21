@@ -1254,7 +1254,7 @@ class MusicBot(discord.Client):
 
         _cmd_get_gif("pat", msg)
 
-    async def _cmd_get_gif(self, type, msg) {
+    async def _cmd_get_gif(self, type, msg):
         async with aiohttp.ClientSession() as session:
             async with session.get('https://nekos.life/api/v2/img/{}'.format(type)) as resp:
                 rjson = await resp.json()
