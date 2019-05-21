@@ -1220,7 +1220,7 @@ class MusicBot(discord.Client):
                 #something something 2 positional parameters so i have to do this extra variable assignment
                 content.set_image(url=url)
                 content.description = msg
-                return Response(content, reply=False, delete_after=45)
+                return content
 
     async def cmd_hug(self, channel, author, user_mentions):
         """
@@ -1242,7 +1242,8 @@ class MusicBot(discord.Client):
         else:
             msg = self.user.name + " gives {} a soft hug :heart:".format(author.mention)
 
-        await self._cmd_get_gif("hug", msg)
+        content = await self._cmd_get_gif("hug", msg)
+        return Response(content, reply=False, delete_after=45)
 
     async def cmd_headpat(self, channel, author, user_mentions):
         """
@@ -1264,7 +1265,8 @@ class MusicBot(discord.Client):
         else:
             msg = self.user.name + " gives {} a small headpat :heart:".format(author.mention)
 
-        await self._cmd_get_gif("pat", msg)
+        content = await self._cmd_get_gif("pat", msg)
+        return Response(content, reply=False, delete_after=45)
 
     async def cmd_yikes(self, message):
         return Response("Yikes! 😬", reply=False, delete_after=30)
