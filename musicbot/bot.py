@@ -1265,7 +1265,6 @@ class MusicBot(discord.Client):
                 content.set_image(url=url)
                 content.description = msg
                 return Response(content, reply=False, delete_after=45)
-    }
 
     async def cmd_yikes(self, message):
         return Response("Yikes! 😬", reply=False, delete_after=30)
