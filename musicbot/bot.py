@@ -1325,12 +1325,12 @@ class MusicBot(discord.Client):
             try:
                 num = int(num)
                 answer = random.randint(0, num)
-                msg = "{} rolled a ".format(author.mention + str(answer)) 
+                msg = "{} rolled a {}".format(author.mention, str(answer)) 
                 return Response(msg, reply=False, delete_after=30)
             except ValueError:
                 pass
         answer = random.randint(0, 100)
-        msg = "{} rolled a {}".format(author.mention + str(answer))
+        msg = "{} rolled a {}".format(author.mention, str(answer))
         return Response(msg, reply=False, delete_after=30)
 
     async def cmd_aar(self, guild, role=None):
