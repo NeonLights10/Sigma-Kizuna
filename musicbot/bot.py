@@ -3809,7 +3809,7 @@ class MusicBot(discord.Client):
             log.info("Found a mention of myself")  
             msgid = await self.dbmsgid.aggregate([
                 {'$match': {'server_id': message.guild.id}},
-                {'$sample': {size: 1}}
+                {'$sample': {'size': 1}}
                 ])
             for channel in message.guild.channels:
                 if channel.id == msgid['channel_id']:
