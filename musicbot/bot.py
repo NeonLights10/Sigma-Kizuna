@@ -3803,13 +3803,13 @@ class MusicBot(discord.Client):
                             if re.match('^%', msg) == None:
                                 return msg.content
                             else:
-                                await get_msgid(message)
+                                await self.get_msgid(message)
 
                         except discord.Forbidden:
                             raise exceptions.CommandError("I don't have permissions to read message history.")
 
                         except discord.NotFound:
-                            await get_msgid(message)
+                            await self.get_msgid(message)
 
     async def on_message(self, message):
         await self.wait_until_ready()
@@ -3825,7 +3825,7 @@ class MusicBot(discord.Client):
 
         if int("281807963147075584") in message.raw_mentions and message.author != self.user:
             log.info("Found a mention of myself")  
-            msg = get_msgid(message)
+            msg = self.get_msgid(message)
             parsedmessage = re.sub('<@!?\d{18}>', '', ).strip()
             await self.safe_send_message(message.channel, parsedmessage)
             #msg = ["Hello!", "Hiya!", "Hi <3", "Did someone say my name?", "That's my name!", "You called for me?", "What's up, %s?" % message.author.mention, "Boo.", "Hi there, %s. Need me to kill anyone?" % message.author.mention]
