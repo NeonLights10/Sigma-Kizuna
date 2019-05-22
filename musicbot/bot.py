@@ -3807,13 +3807,13 @@ class MusicBot(discord.Client):
                                 log.info("Message is ok")
                                 return msg.content
                             else:
-                                await self.get_msgid(message)
+                                return await self.get_msgid(message)
 
                         except discord.Forbidden:
                             raise exceptions.CommandError("I don't have permissions to read message history.")
 
                         except discord.NotFound:
-                            await self.get_msgid(message)
+                            return await self.get_msgid(message)
 
     async def on_message(self, message):
         await self.wait_until_ready()
