@@ -1333,6 +1333,12 @@ class MusicBot(discord.Client):
         msg = "{} rolled a {}".format(author.mention, str(answer))
         return Response(msg, reply=False, delete_after=30)
 
+    async def cmd_screenshare(self, guild, author):
+        if author.voice:
+            return Response("Screenshare link (desktop only!): <https://discordapp.com/channels/{}/{}>".format(guild.id, author.voice.channel.id), reply=True, delete_after=60)
+        else:
+            raise exceptions.CommandError("You are not in a voice channel!")
+
     async def cmd_aar(self, guild, role=None):
         """
         Usage:
