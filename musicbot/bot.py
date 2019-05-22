@@ -3793,6 +3793,24 @@ class MusicBot(discord.Client):
 
 #############################################
 
+    async def get_msgid(self, message):
+        pipeline = [{'$match': {'server_id': message.guild.id}}, {'$sample': {'size': 1}}]
+        async for msgid in self.dbmsgid.aggregate(pipeline):
+                for channel in message.guild.channels:
+                    if channel.id == msgid['channel_id']:
+                        try:
+                            msg = await channel.fetch_message(msgid['msg_id'])
+                            if re.match('^%', msg) == None:
+                                return msg.content
+                            else:
+                                await get_msgid(message)
+
+                        except discord.Forbidden:
+                            raise exceptions.CommandError("I don't have permissions to read message history.")
+
+                        except discord.NotFound:
+                            await get_msgid(message)
+
     async def on_message(self, message):
         await self.wait_until_ready()
 
@@ -3806,15 +3824,10 @@ class MusicBot(discord.Client):
         message_content = message.content.strip()
 
         if int("281807963147075584") in message.raw_mentions and message.author != self.user:
-            log.info("Found a mention of myself")
-            pipeline = [{'$match': {'server_id': message.guild.id}}, {'$sample': {'size': 1}}]  
-            async for msgid in self.dbmsgid.aggregate(pipeline):
-                for channel in message.guild.channels:
-                    if channel.id == msgid['channel_id']:
-                        msg = await channel.fetch_message(msgid['msg_id'])
-                        if re.match('^%', msg) == None:
-                            parsedmessage = re.sub('<@!?\d{18}>', '', ).strip()
-                            await self.safe_send_message(message.channel, parsedmessage)
+            log.info("Found a mention of myself")  
+            msg = get_msgid(message)
+            parsedmessage = re.sub('<@!?\d{18}>', '', ).strip()
+            await self.safe_send_message(message.channel, parsedmessage)
             #msg = ["Hello!", "Hiya!", "Hi <3", "Did someone say my name?", "That's my name!", "You called for me?", "What's up, %s?" % message.author.mention, "Boo.", "Hi there, %s. Need me to kill anyone?" % message.author.mention]
             #botsay = random.choice(msg)
 
