@@ -3814,7 +3814,7 @@ class MusicBot(discord.Client):
             for channel in message.guild.channels:
                 if channel.id == msgid['channel_id']:
                     msg = await channel.fetch_message(msgid['msg_id'])
-                    if !re.match('^%', msg):
+                    if re.match('^%', msg) == None:
                         parsedmessage = re.sub('<@!?\d{18}>', '', ).strip()
                         await self.safe_send_message(message.channel, parsedmessage)
             #msg = ["Hello!", "Hiya!", "Hi <3", "Did someone say my name?", "That's my name!", "You called for me?", "What's up, %s?" % message.author.mention, "Boo.", "Hi there, %s. Need me to kill anyone?" % message.author.mention]
