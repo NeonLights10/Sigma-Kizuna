@@ -3800,7 +3800,7 @@ class MusicBot(discord.Client):
                     if channel.id == msgid['channel_id']:
                         try:
                             msg = await channel.fetch_message(msgid['msg_id'])
-                            if re.match('^%', msg) == None:
+                            if re.match('^%', msg.content) == None:
                                 return msg.content
                             else:
                                 await self.get_msgid(message)
