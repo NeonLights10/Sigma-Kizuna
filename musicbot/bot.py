@@ -3825,7 +3825,8 @@ class MusicBot(discord.Client):
 
         if int("281807963147075584") in message.raw_mentions and message.author != self.user:
             log.info("Found a mention of myself")  
-            msg = self.get_msgid(message)
+            msg = await self.get_msgid(message)
+            log.info(msg)
             parsedmessage = re.sub('<@!?\d{18}>', '', msg).strip()
             await self.safe_send_message(message.channel, parsedmessage)
             #msg = ["Hello!", "Hiya!", "Hi <3", "Did someone say my name?", "That's my name!", "You called for me?", "What's up, %s?" % message.author.mention, "Boo.", "Hi there, %s. Need me to kill anyone?" % message.author.mention]
