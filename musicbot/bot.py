@@ -3806,17 +3806,15 @@ class MusicBot(discord.Client):
         message_content = message.content.strip()
 
         if int("281807963147075584") in message.raw_mentions and message.author != self.user:
-            log.info("Found a mention of myself")  
-            msgid = self.dbmsgid.aggregate([
-                {'$match': {'server_id': message.guild.id}},
-                {'$sample': {'size': 1}}
-                ])
-            for channel in message.guild.channels:
-                if channel.id == msgid['channel_id']:
-                    msg = await channel.fetch_message(msgid['msg_id'])
-                    if re.match('^%', msg) == None:
-                        parsedmessage = re.sub('<@!?\d{18}>', '', ).strip()
-                        await self.safe_send_message(message.channel, parsedmessage)
+            log.info("Found a mention of myself")
+            pipeline = [{'$match': {'server_id': message.guild.id}}, {'$sample': {'size': 1}}]  
+            async for msgid in self.dbmsgid.aggregate(pipeline):
+                for channel in message.guild.channels:
+                    if channel.id == msgid['channel_id']:
+                        msg = await channel.fetch_message(msgid['msg_id'])
+                        if re.match('^%', msg) == None:
+                            parsedmessage = re.sub('<@!?\d{18}>', '', ).strip()
+                            await self.safe_send_message(message.channel, parsedmessage)
             #msg = ["Hello!", "Hiya!", "Hi <3", "Did someone say my name?", "That's my name!", "You called for me?", "What's up, %s?" % message.author.mention, "Boo.", "Hi there, %s. Need me to kill anyone?" % message.author.mention]
             #botsay = random.choice(msg)
 
