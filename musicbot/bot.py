@@ -3802,7 +3802,7 @@ class MusicBot(discord.Client):
                         try:
                             msg = await channel.fetch_message(msgid['msg_id'])
                             log.info("Retrieved message")
-                            if re.match('^%', msg.content) == None:
+                            if (re.match('^%', msg.content) == None) and (re.match('<@!?281807963147075584>', msg.content == None):
                                 log.info("Message is ok")
                                 return msg.content
                             else:
@@ -3830,7 +3830,7 @@ class MusicBot(discord.Client):
             log.info("Found a mention of myself")  
             msg = await self.get_msgid(message)
             log.info(msg)
-            parsedmessage = re.sub('<@!?\d{18}>', 'Sigma', msg).strip()
+            parsedmessage = re.sub('<@!?\d{18}>', '', msg).strip()
             log.info("Parsed: " + parsedmessage)
             await self.safe_send_message(message.channel, parsedmessage)
             #msg = ["Hello!", "Hiya!", "Hi <3", "Did someone say my name?", "That's my name!", "You called for me?", "What's up, %s?" % message.author.mention, "Boo.", "Hi there, %s. Need me to kill anyone?" % message.author.mention]
