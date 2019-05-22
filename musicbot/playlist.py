@@ -390,7 +390,7 @@ class Playlist(EventEmitter, Serializable):
         self.entries.appendleft(entry)
         self.emit('entry-added', playlist=self, entry=entry)
         entry.get_ready_future()
-        return entry
+        return entr
 
     def remove_entry(self, index):
         del self.entries[index]
