@@ -3803,7 +3803,7 @@ class MusicBot(discord.Client):
                             msg = await channel.fetch_message(msgid['msg_id'])
                             log.info("Retrieved message")
                             log.info(msg.content)
-                            if (re.match('^%|\$|!', msg.content) == None) and (re.match('<@!?281807963147075584>', msg.content) == None) and (msg.embeds == None):
+                            if (re.match('^%|\$|!', msg.content) == None) and (re.match('<@!?281807963147075584>', msg.content) == None) and (len(msg.embeds) == 0):
                                 log.info("Message is ok")
                                 return msg.content
                             else:
