@@ -3794,7 +3794,20 @@ class MusicBot(discord.Client):
 #############################################
 
     async def get_msgid(self, message):
-        pipeline = [{'$match': {'server_id': message.guild.id}}, {'$sample': {'size': 1}}]
+        #pipeline = [{'$match': {'server_id': message.guild.id}}, {'$sample': {'size': 1}}]
+        pipeline = [{
+            '$and': [{
+                'server_id': message.guild.id
+            }, {
+                '$not': [{
+                    'author_id': 281807963147075584
+                }]
+            }], {
+                '$sample': {
+                    'size': 1
+                }
+            }
+        }]
         async for msgid in self.dbmsgid.aggregate(pipeline):
                 for channel in message.guild.channels:
                     if channel.id == msgid['channel_id']:
@@ -3820,6 +3833,7 @@ class MusicBot(discord.Client):
         current_timestamp = datetime.datetime.utcnow()
         post = {'server_id': message.guild.id,
                 'channel_id': message.channel.id,
+                'author_id': message.author.id,
                 'msg_id': message.id}
         await self.dbmsgid.insert_one(post)
 
