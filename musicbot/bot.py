@@ -3795,7 +3795,7 @@ class MusicBot(discord.Client):
 
     async def get_msgid(self, message):
         #pipeline = [{'$match': {'server_id': message.guild.id}}, {'$sample': {'size': 1}}]
-        pipeline = [{'$match': {'$and': [{'server_id': message.guild.id}, {'$not': [{'author_id': 281807963147075584}] }] }}, {'$sample': {'size': 1}}]
+        pipeline = [{'$match': {'$and': [{'server_id': message.guild.id}, {'author_id':  {'$not': 281807963147075584}}] }}, {'$sample': {'size': 1}}]
         async for msgid in self.dbmsgid.aggregate(pipeline):
                 for channel in message.guild.channels:
                     if channel.id == msgid['channel_id']:
