@@ -3803,6 +3803,7 @@ class MusicBot(discord.Client):
                             log.info(msg.content)
                             if (re.match('^%|\$|!|@', msg.content) == None) and (re.match('<@!?281807963147075584>', msg.content) == None) and (len(msg.embeds) == 0) and (msg.author.bot == False):
                                 #log.info("Message is ok")
+                                log.info("Message ID:{}".format(msg.id))
                                 return msg.content
                             else:
                                 return await self.get_msgid(message)
