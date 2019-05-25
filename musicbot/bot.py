@@ -280,8 +280,7 @@ class MusicBot(discord.Client):
         await self.dbservers.insert_one(post)
 
     async def _check_document(self, guild, id):
-        log.info("Checking for db document")
-        log.info(await self.dbservers.find_one({"server_id": id}))
+        log.info("Checking db document for {}".format(guild.name))
         if await self.dbservers.find_one({"server_id": id}) == None:
             log.info("Did not find, creating one")
             await self._initialize_document(guild, id)
@@ -1226,7 +1225,7 @@ class MusicBot(discord.Client):
     async def cmd_hug(self, channel, author, user_mentions):
         """
         Usage:
-            {command_prefix}hug [recipient]
+            {command_prefix}hug [recipients]
         Hug somebody!
         If no recipient is specified, Sigma-chan will hug you <3
         """
@@ -1249,8 +1248,8 @@ class MusicBot(discord.Client):
     async def cmd_cuddle(self, channel, author, user_mentions):
         """
         Usage:
-            {command_prefix}cuddle [recipient]
-        Hug somebody!
+            {command_prefix}cuddle [recipients]
+        Cuddle somebody!
         If no recipient is specified, Sigma-chan will cuddle you <3
         """
         if user_mentions and len(user_mentions) == 1:
@@ -1272,8 +1271,8 @@ class MusicBot(discord.Client):
     async def cmd_poke(self, channel, author, user_mentions):
         """
         Usage:
-            {command_prefix}poke [recipient]
-        Hug somebody!
+            {command_prefix}poke [recipients]
+        Poke somebody!
         If no recipient is specified, Sigma-chan will poke you :P
         """
         if user_mentions and len(user_mentions) == 1:
@@ -1295,8 +1294,8 @@ class MusicBot(discord.Client):
     async def cmd_headpat(self, channel, author, user_mentions):
         """
         Usage:
-            {command_prefix}headpat [recipient]
-        Hug somebody!
+            {command_prefix}headpat [recipients]
+        Headpat somebody!
         If no recipient is specified, Sigma-chan will pat you <3
         """
         if user_mentions and len(user_mentions) == 1:
@@ -1322,6 +1321,11 @@ class MusicBot(discord.Client):
         return Response("¯\_(ツ)_/¯", reply=False, delete_after=30)
 
     async def cmd_roll(self, author, num=None):
+        """
+        Usage:
+            {command_prefix}roll [number]
+            Get a random number from 0-100. If a number is specified, it will do from 0 to that number isntead.
+        """
         if num:
             try:
                 num = int(num)
@@ -1343,7 +1347,7 @@ class MusicBot(discord.Client):
     async def cmd_aar(self, guild, role=None):
         """
         Usage:
-            {command_prefix}aar [role]
+            {command_prefix}aar [role name]
         Enables auto assign role with a specific role. Server specific.
         Owner only.
         """
@@ -1365,8 +1369,8 @@ class MusicBot(discord.Client):
     async def cmd_purge(self, channel, message, user_mentions, leftover_args, num = None, usermentions = None):
         """
         Usage:
-            {command_prefix}purge [number]
-        Deletes the previous # of messages from the channel.
+            {command_prefix}purge [number] [mentions]
+        Deletes the previous # of messages from the channel. Specifying a user will delete the messages only for that user.
         """
 
         if user_mentions:
@@ -1580,7 +1584,7 @@ class MusicBot(discord.Client):
     async def cmd_addrole(self, message, author, guild, mentions, leftover_args):
         """
         Usage:
-            {command_prefix}addrole <user mentions> <rolename>
+            {command_prefix}addrole [user mentions] [rolename]
 
         Adds selected members to a new role (role created with name specified). User mentions are optional.
         """
@@ -1638,7 +1642,7 @@ class MusicBot(discord.Client):
     async def cmd_addmember(self, message, guild, user_mentions, leftover_args):
         """
         Usage:
-            {command_prefix}addmember <user mentions> (role mentions) (role name)
+            {command_prefix}addmember [user mentions] (role mentions) (role name)
 
         Adds one or more members to one or more roles. You can choose to use either role mentions (to make people angry) or just the name of the role itself.
         """
@@ -1676,7 +1680,7 @@ class MusicBot(discord.Client):
     async def cmd_removemember(self, message, guild, user_mentions, leftover_args):
         """
         Usage:
-            {command_prefix}removemember <user mentions> (role mentions) (role name)
+            {command_prefix}removemember [user mentions] (role mentions) (role name)
 
         Removes one or more members from one or more roles. You can choose to use either role mentions (to make people angry) or just the name of the role itself.
         """
@@ -1959,8 +1963,6 @@ class MusicBot(discord.Client):
         Promotes the last song in the queue to the front.
         If you specify a position in the queue, it promotes the song at that position to the front.
         """
-        #if self.ownerlock:
-        #    raise exceptions.PermissionsError("This bot has been locked by the owner")
 
         if player.is_stopped:
             raise exceptions.CommandError("Can't modify the queue! The player is not playing!", expire_in=20)
@@ -2006,8 +2008,6 @@ class MusicBot(discord.Client):
             {command_prefix}sub [song position]
         Substitute a song in the queue with a different song.
         """
-        #if self.ownerlock:
-        #    raise exceptions.PermissionsError("This bot has been locked by the owner")
 
         if player.is_stopped:
             raise exceptions.CommandError("Can't modify the queue! The player is not playing!", expire_in=20)
@@ -2230,12 +2230,12 @@ class MusicBot(discord.Client):
     async def cmd_playnow(self, message, player, channel, author, permissions, leftover_args, song_url):
         """
         Usage:
-            {command_prefix}play song_link
-            {command_prefix}play text to search for
-            {command_prefix}play spotify_uri
+            {command_prefix}playnow song_link
+            {command_prefix}playnow text to search for
+            {command_prefix}playnow spotify_uri
 
-        Adds the song to the playlist.  If a link is not provided, the first
-        result from a youtube search is added to the queue.
+        Plays the song immediately, skipping the queue.  If a link is not provided, the first
+        result from a youtube search is played
 
         If enabled in the config, the bot will also support Spotify URIs, however
         it will use the metadata (e.g song name and artist) to find a YouTube
@@ -3794,7 +3794,6 @@ class MusicBot(discord.Client):
 #############################################
 
     async def get_msgid(self, message):
-        #pipeline = [{'$match': {'server_id': message.guild.id}}, {'$sample': {'size': 1}}]
         pipeline = [{'$match': {'$and': [{'server_id': message.guild.id}, {'author_id': {'$not': {'$regex': '281807963147075584'}}}] }}, {'$sample': {'size': 1}}]
         async for msgid in self.dbmsgid.aggregate(pipeline):
                 for channel in message.guild.channels:
