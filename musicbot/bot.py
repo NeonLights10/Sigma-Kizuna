@@ -3800,7 +3800,7 @@ class MusicBot(discord.Client):
                     if channel.id == msgid['channel_id']:
                         try:
                             msg = await channel.fetch_message(msgid['msg_id'])
-                            log.info(msg.content)
+                            #log.info(msg.content)
                             if (re.match('^%|\$|!|@', msg.content) == None) and (re.match('<@!?281807963147075584>', msg.content) == None) and (len(msg.embeds) == 0) and (msg.author.bot == False):
                                 #log.info("Message is ok")
                                 log.info("Message ID:{}".format(msg.id))
@@ -3830,7 +3830,7 @@ class MusicBot(discord.Client):
         if int("281807963147075584") in message.raw_mentions and message.author != self.user:
             log.info("Found a mention of myself")  
             msg = await self.get_msgid(message)
-            #log.info(msg)
+            log.info(msg)
             parsedmessage = re.sub('<@!?\d{18}>', ' ', msg).strip()
             #log.info("Parsed: " + parsedmessage)
             await self.safe_send_message(message.channel, parsedmessage)
