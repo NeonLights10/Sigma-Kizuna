@@ -1366,6 +1366,31 @@ class MusicBot(discord.Client):
         else:
             raise exceptions.CommandError("No argument specified.", expire_in=20)
 
+    async def cmd_purgeid(self, channel, message, msg_id = None):
+        """
+        Usage:
+            {command_prefix}purgeid [id number]
+        Deletes the message with the ID specified.
+        """
+        if msg_id:
+            try:
+                msg_id = int(msg_id)
+            except ValueError:
+                raise exceptions.CommandError("Invalid number specified.", expire_in=20)
+
+            def id_check(m):
+                return m.id == msg_id
+
+            try:
+                await channel.purge(check=id_check)
+                msg = "Message {} deleted.".format(msg_id)
+                return Response(msg, reply=False, delete_after=20)
+            except discord.Forbidden:
+                raise exceptions.CommandError("It seems like I don't have the permissions to do that. Check your server settings?", expire_in=20)
+        else:
+            raise exceptions.CommandError("Specify a message ID!")
+                
+
     async def cmd_purge(self, channel, message, user_mentions, leftover_args, num = None, usermentions = None):
         """
         Usage:
