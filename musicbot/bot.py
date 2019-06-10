@@ -1213,14 +1213,17 @@ class MusicBot(discord.Client):
     async def _cmd_get_gif(self, type, msg):
         async with aiohttp.ClientSession() as session:
             async with session.get('https://nekos.life/api/v2/img/{}'.format(type)) as resp:
-                rjson = await resp.json()
-                content = discord.Embed(colour=0x1abc9c)
-                content.set_footer(text="Sugoi!")
-                url = rjson.get('url')
-                #something something 2 positional parameters so i have to do this extra variable assignment
-                content.set_image(url=url)
-                content.description = msg
-                return content
+                if resp.status == 200:
+                    rjson = await resp.json()
+                    content = discord.Embed(colour=0x1abc9c)
+                    content.set_footer(text="Sugoi!")
+                    url = rjson.get('url')
+                    #something something 2 positional parameters so i have to do this extra variable assignment
+                    content.set_image(url=url)
+                    content.description = msg
+                    return content
+                else:
+                    raise exceptions.CommandError("The API returned a status code of {}. This might mean that the service is unavailable at this time. Try again later?".format(resp.status))
 
     async def cmd_hug(self, channel, author, user_mentions):
         """
