@@ -3821,7 +3821,7 @@ class MusicBot(discord.Client):
 
 #############################################
 
-    async def get_msgid(self, message, attempts):
+    async def get_msgid(self, message, attempts = 1):
         pipeline = [{'$match': {'$and': [{'server_id': message.guild.id}, {'author_id': {'$not': {'$regex': '281807963147075584'}}}] }}, {'$sample': {'size': 1}}]
         async for msgid in self.dbmsgid.aggregate(pipeline):
                 for channel in message.guild.channels:
@@ -3860,7 +3860,7 @@ class MusicBot(discord.Client):
 
         if int("281807963147075584") in message.raw_mentions and message.author != self.user:
             log.info("Found a mention of myself")  
-            msg = await self.get_msgid(message, 0)
+            msg = await self.get_msgid(message)
             log.info(msg)
             parsedmessage = re.sub('<@!?\d{18}>', ' ', msg).strip()
             #log.info("Parsed: " + parsedmessage)
