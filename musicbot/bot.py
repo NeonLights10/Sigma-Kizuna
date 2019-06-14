@@ -3821,7 +3821,7 @@ class MusicBot(discord.Client):
 
 #############################################
 
-    async def get_msgid(self, message):
+    async def get_msgid(self, message, attempts = 0):
         pipeline = [{'$match': {'$and': [{'server_id': message.guild.id}, {'author_id': {'$not': {'$regex': '281807963147075584'}}}] }}, {'$sample': {'size': 1}}]
         async for msgid in self.dbmsgid.aggregate(pipeline):
                 for channel in message.guild.channels:
@@ -3831,16 +3831,19 @@ class MusicBot(discord.Client):
                             #log.info(msg.content)
                             if (re.match('^%|\$|!|@', msg.content) == None) and (re.match('<@!?281807963147075584>', msg.content) == None) and (len(msg.embeds) == 0) and (msg.author.bot == False):
                                 #log.info("Message is ok")
+                                log.info("Attempts taken:{}".format(attempts))
                                 log.info("Message ID:{}".format(msg.id))
                                 return msg.content
                             else:
-                                return await self.get_msgid(message)
+                                attempts += 1
+                                return await self.get_msgid(message, attempts)
 
                         except discord.Forbidden:
                             raise exceptions.CommandError("I don't have permissions to read message history.")
 
                         except discord.NotFound:
-                            return await self.get_msgid(message)
+                            attempts += 1
+                            return await self.get_msgid(message, attempts)
 
     async def on_message(self, message):
         await self.wait_until_ready()
