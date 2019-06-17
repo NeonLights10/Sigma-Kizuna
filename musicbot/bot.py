@@ -1756,7 +1756,7 @@ class MusicBot(discord.Client):
         content.add_field(name="Author", value="Neon#4792")
         content.add_field(name="BotID", value=self.user.id)
         content.add_field(name="Songs Played", value=player.songs_played)
-        content.add_field(name="Messages", value=str(self.message_count) + ' (' + '%.2f'%(self.message_count / ((time.time()-self.uptime) / 60) +'/sec)')
+        content.add_field(name="Messages", value=str(self.message_count) + ' (' + '%.2f'%(self.message_count / ((time.time()-self.uptime) / 60)) +'/sec)')
         process = psutil.Process(os.getpid())
         mem = process.memory_full_info()
         mem = mem.uss / 1000000
