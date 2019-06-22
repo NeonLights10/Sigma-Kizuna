@@ -1624,7 +1624,6 @@ class MusicBot(discord.Client):
         log.info(parsedargs)
         if parsedargs:
             rolename = parsedargs
-            role_pos = None;
         else:
             raise exceptions.CommandError("Invalid arguments specified, or order is incorrect!")
         
@@ -1771,43 +1770,40 @@ class MusicBot(discord.Client):
         content.add_field(name="Uptime", value="%d days\n%d hours\n%d minutes" % (day, hour, minutes))
         await self.safe_send_message(channel, content, expire_in=60)
 
-    async def cmd_kick(self, message, guild, user_mentions, reason=None):
+    async def cmd_kick(self, message, guild, user_mentions):
         """
         Usage:
-            {command_prefix}kick [user mentions] <reason>
+            {command_prefix}kick [user mentions]
 
-        Kick one or multiple users. Reason (optional) must be put in quotes.
+        Kick one or multiple users.
         """
         for user in user_mentions:
             if user != self.user:
                 try:
-                    if reason:
-                        await guild.kick(user, reason)
-                    else:
-                        await guild.kick(user)
+                    await guild.kick(user)
                 except:
                     raise exceptions.CommandError("Something went wrong!")
             else:
                 raise exceptions.CommandError("Uhh, I can't kick myself...")
 
-    async def cmd_ban(self, message, guild, user_mentions, reason=None):
+    async def cmd_ban(self, message, guild, user_mentions):
         """
         Usage:
-            {command_prefix}ban [user mentions] <reason>
+            {command_prefix}ban [user mentions]
 
-        Ban one or multiple users. Reason (optional) must be put in quotes. Automatically deletes the past days worth of messages.
+        Ban one or multiple users. Automatically deletes the past days worth of messages.
         """
         for user in user_mentions:
             if user != self.user:
                 try:
-                    if reason:
-                        await guild.ban(user, reason)
-                    else:
-                        await guild.ban(user)
+                    await guild.ban(user)
                 except:
                     raise exceptions.CommandError("Something went wrong!")
             else:
                 raise exceptions.CommandError("Uhh, I can't ban myself...")
+
+    async def cmd_testparameter(self, message, leftover_args):
+        return Response('{} arguments: {}'.format(len(leftover_args), ', '.join(leftover_args)))
 
     async def cmd_slowmode(self, channel, time=None):
         """
