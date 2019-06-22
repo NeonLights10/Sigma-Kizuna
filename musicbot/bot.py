@@ -1814,7 +1814,7 @@ class MusicBot(discord.Client):
             if pattern.match(arg):
                 leftover_args.remove(arg)
                 log.info(leftover_args)
-        return Response(leftover_args, delete_after=60)
+        return Response(' '.join(leftover_args), delete_after=60)
 
     async def cmd_slowmode(self, channel, time=None):
         """
