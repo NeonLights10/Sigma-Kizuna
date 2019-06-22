@@ -1806,7 +1806,7 @@ class MusicBot(discord.Client):
         try:
             leftover_args = shlex.split(' '.join(leftover_args))
         except ValueError:
-            raise exceptions.CommandError("Please quote the query properly"), expire_in=30)
+            raise exceptions.CommandError("Please quote the query properly", expire_in=30)
 
         pattern = re.compile('<@!?\d{17,18}>')
         for arg in leftover_args:
