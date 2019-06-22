@@ -1619,6 +1619,7 @@ class MusicBot(discord.Client):
             leftover_args = shlex.split(' '.join(leftover_args))
         except ValueError:
             raise exceptions.CommandError("Please quote the role properly", expire_in=30)
+        log.info(leftover_args)
 
         if mentions:
             pattern = re.compile('<@!?\d{17,18}>')
@@ -1629,7 +1630,9 @@ class MusicBot(discord.Client):
             for arg in lcopy:
                 if pattern.match(arg):
                     leftover_args.remove(arg)
+                    log.info(leftover_args)
 
+        log.info(leftover_args)
         rolename = leftover_args.pop()
         
         role_permissions = guild.default_role
