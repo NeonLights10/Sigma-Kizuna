@@ -1663,7 +1663,7 @@ class MusicBot(discord.Client):
     async def cmd_removerole(self, message, author, role_mentions):
         """
         Usage:
-            {command_prefix}removerole <role mention>
+            {command_prefix}removerole [role mentions]
 
         Removes a role completely
         """
@@ -1677,12 +1677,12 @@ class MusicBot(discord.Client):
         else:
             raise exceptions.CommandError("No role specified!")
 
-    async def cmd_addmember(self, message, guild, user_mentions, leftover_args):
+    async def cmd_adduser(self, message, guild, user_mentions, leftover_args):
         """
         Usage:
-            {command_prefix}addmember [user mentions] (role mentions) (role name)
+            {command_prefix}adduser [user mentions] (role mentions) (role name)
 
-        Adds one or more members to one or more roles. You can choose to use either role mentions (to make people angry) or just the name of the role itself.
+        Adds one or more users to one or more roles. You can choose to use either role mentions (to make people angry) or just the name of the role itself in quotations.
         """
         if user_mentions:
             if message.role_mentions:
@@ -1694,62 +1694,78 @@ class MusicBot(discord.Client):
                             raise exceptions.CommandError("Failed to add %s to %s" % (user.name, role))
                 return Response("Added members to roles.", delete_after=30)
             else:
-                args = ' '.join(leftover_args)
-                #This is actually the most jenky way to deal with whatever the fudge this bot handles leftover args, but I have no better ideas right now.
-                parsedargs = re.sub('<@!?\d{17,18}>', '', args).strip()
-                if parsedargs:
-                    role_name = parsedargs.split(", ")
-                    for name in role_name:
-                        role = discord.utils.find(lambda r: r.name == name, guild.roles)
-                        if role:
-                            for user in user_mentions:
-                                try:
-                                    await user.add_roles(role)
-                                except:
-                                    raise exceptions.CommandError("Failed to add %s to %s" % (user.name, role))
-                        else:
-                            raise exceptions.CommandError("Role not found! Did you spell it wrong?")
-                    return Response("Added members to roles.", delete_after=30)
+                try:
+                    leftover_args = shlex.split(' '.join(leftover_args))
+                except ValueError:
+                    raise exceptions.CommandError("Please quote the reason properly", expire_in=30)
+
+                pattern = re.compile('<@!?\d{17,18}>')
+                for x in range(len(leftover_args) - 1):
+                    if not pattern.match(leftover_args[x]):
+                        raise exceptions.CommandError("Incorrect argument order or too many arguments!", expire_in=30)
+                lcopy = leftover_args[:]
+                for arg in lcopy:
+                    if pattern.match(arg):
+                        leftover_args.remove(arg)
+
+                role_name = leftover_args.pop()
+                    
+                role = discord.utils.find(lambda r: r.name == name, guild.roles)
+                if role:
+                    for user in user_mentions:
+                        try:
+                            await user.add_roles(role)
+                        except:
+                            raise exceptions.CommandError("Failed to add %s to %s" % (user.name, role))
                 else:
-                    raise exceptions.CommandError("Invalid arguments specified! Did you specify a role?")
+                    raise exceptions.CommandError("Role not found! Did you spell it wrong?")
+                return Response("Added members to roles.", delete_after=30)
         else:
             raise exceptions.CommandError("Invalid arguments specified! Did you specify a user?")
 
-    async def cmd_removemember(self, message, guild, user_mentions, leftover_args):
+    async def cmd_removeuser(self, message, guild, user_mentions, leftover_args):
         """
         Usage:
-            {command_prefix}removemember [user mentions] (role mentions) (role name)
+            {command_prefix}removeuser [user mentions] (role mentions) (role name)
 
-        Removes one or more members from one or more roles. You can choose to use either role mentions (to make people angry) or just the name of the role itself.
+        Removes one or more users from one or more roles. You can choose to use either role mentions (to make people angry) or just the name of the role itself in quotations.
         """
         if user_mentions:
             if message.role_mentions:
                 for role in message.role_mentions:
                     for user in user_mentions:
                         try:
-                            await user.emove_roles(role)
+                            await user.remove_roles(role)
                         except:
                             raise exceptions.CommandError("Failed to remove %s from %s" % (user.name, role))
                 return Response("Removed members from roles.", delete_after=30)
             else:
-                args = ' '.join(leftover_args)
-                #This is actually the most jenky way to deal with whatever the fudge this bot handles leftover args, but I have no better ideas right now.
-                parsedargs = re.sub('<@!?\d{17,18}>', '', args).strip()
-                if parsedargs:
-                    role_name = parsedargs.split(", ")
-                    for name in role_name:
-                        role = discord.utils.find(lambda r: r.name == name, guild.roles)
-                        if role:
-                            for user in user_mentions:
-                                try:
-                                    await user.remove_roles(role)
-                                except:
-                                    raise exceptions.CommandError("Failed to remove %s from %s" % (user.name, role))
-                        else:
-                            raise exceptions.CommandError("Role not found! Did you spell it wrong?")
-                    return Response("Removed members from roles.", delete_after=30)
+                try:
+                    leftover_args = shlex.split(' '.join(leftover_args))
+                except ValueError:
+                    raise exceptions.CommandError("Please quote the reason properly", expire_in=30)
+
+                pattern = re.compile('<@!?\d{17,18}>')
+                for x in range(len(leftover_args) - 1):
+                    if not pattern.match(leftover_args[x]):
+                        raise exceptions.CommandError("Incorrect argument order or too many arguments!", expire_in=30)
+                lcopy = leftover_args[:]
+                for arg in lcopy:
+                    if pattern.match(arg):
+                        leftover_args.remove(arg)
+
+                role_name = leftover_args.pop()
+                    
+                role = discord.utils.find(lambda r: r.name == name, guild.roles)
+                if role:
+                    for user in user_mentions:
+                        try:
+                            await user.remove_roles(role)
+                        except:
+                            raise exceptions.CommandError("Failed to remove %s from %s" % (user.name, role))
                 else:
-                    raise exceptions.CommandError("Invalid arguments specified! Did you specify a role?")
+                    raise exceptions.CommandError("Role not found! Did you spell it wrong?")
+                return Response("Removed members from roles.", delete_after=30)
         else:
             raise exceptions.CommandError("Invalid arguments specified! Did you specify a user?")
 
