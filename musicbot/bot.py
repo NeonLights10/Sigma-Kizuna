@@ -1756,7 +1756,7 @@ class MusicBot(discord.Client):
         content.add_field(name="Author", value="Neon#4792")
         content.add_field(name="BotID", value=self.user.id)
         content.add_field(name="Songs Played", value=player.songs_played)
-        content.add_field(name="Messages", value=str(self.message_count) + ' (' + '%.2f'%(self.message_count / ((time.time()-self.uptime) / 60)) +'/sec)')
+        content.add_field(name="Messages", value=str(self.message_count) + ' (' + '%.2f'%(self.message_count / ((time.time()-self.uptime) / 60)) +'/min)')
         process = psutil.Process(os.getpid())
         mem = process.memory_full_info()
         mem = mem.uss / 1000000
@@ -1771,22 +1771,58 @@ class MusicBot(discord.Client):
         content.add_field(name="Uptime", value="%d days\n%d hours\n%d minutes" % (day, hour, minutes))
         await self.safe_send_message(channel, content, expire_in=60)
 
-    async def cmd_kick(self, message, guild, user_mentions):
+    async def cmd_kick(self, message, guild, user_mentions, reason=None):
+        """
+        Usage:
+            {command_prefix}kick [user mentions] <reason>
+
+        Kick one or multiple users. Reason (optional) must be put in quotes.
+        """
         for user in user_mentions:
             if user != self.user:
                 try:
-                    await guild.kick(user)
+                    if reason:
+                        await guild.kick(user, reason)
+                    else:
+                        await guild.kick(user)
                 except:
                     raise exceptions.CommandError("Something went wrong!")
             else:
                 raise exceptions.CommandError("Uhh, I can't kick myself...")
 
-    async def cmd_slowmode(self, guild, time=None):
+    async def cmd_ban(self, message, guild, user_mentions, reason=None):
+        """
+        Usage:
+            {command_prefix}ban [user mentions] <reason>
+
+        Ban one or multiple users. Reason (optional) must be put in quotes. Automatically deletes the past days worth of messages.
+        """
+        for user in user_mentions:
+            if user != self.user:
+                try:
+                    if reason:
+                        await guild.ban(user, reason)
+                    else:
+                        await guild.ban(user)
+                except:
+                    raise exceptions.CommandError("Something went wrong!")
+            else:
+                raise exceptions.CommandError("Uhh, I can't ban myself...")
+
+    async def cmd_slowmode(self, channel, time=None):
+        """
+        Usage:
+            {command_prefix}slowmode [time]
+
+        Enables slowmode for the channel you're in. Time is in seconds.
+        """
         if time:
             if time.lower() == "off":
-                await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'slowmode': 0}})
-                await self.dbservers.delete_many({"server_id": guild.id})
-                return Response("Slowmode has been disabled", reply=False, delete_after=30)
+                try:
+                    channel.slowmode_delay = 0
+                except:
+                    raise exceptions.CommandError("Couldn't turn off slowmode! I might not have permissions to do so.")
+                return Response("Slowmode has been disabled for " + channel.name, reply=False, delete_after=30)
             else:
                 try:
                     time = int(time)
@@ -1794,8 +1830,11 @@ class MusicBot(discord.Client):
                     raise exceptions.CommandError("Invalid argument specified. Did you enter a number?", expire_in=20)
                 if time <= 0:
                     raise exceptions.CommandError("Invalid time specified! Please give a time in seconds.")
-                await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'slowmode': time}})
-                return Response("Slowmode has been enabled in " + guild.name, reply=False, delete_after=30)           
+                    try:
+                        channel.slowmode_delay = time
+                    except:
+                        raise exceptions.CommandError("Couldn't set slowmode! I might not have permissions to do so.")
+                return Response("Slowmode has been enabled in " + channel.name, reply=False, delete_after=30)           
 
 ##############################################
 
@@ -3865,9 +3904,8 @@ class MusicBot(discord.Client):
             parsedmessage = re.sub('<@!?\d{18}>', ' ', msg).strip()
             #log.info("Parsed: " + parsedmessage)
             await self.safe_send_message(message.channel, parsedmessage)
-            #msg = ["Hello!", "Hiya!", "Hi <3", "Did someone say my name?", "That's my name!", "You called for me?", "What's up, %s?" % message.author.mention, "Boo.", "Hi there, %s. Need me to kill anyone?" % message.author.mention]
-            #botsay = random.choice(msg)
 
+        """
         #let's deal with slowmode stuff before we deal with any commands
         try:
             document = await self.dbservers.find_one({"server_id": message.guild.id})
@@ -3905,6 +3943,7 @@ class MusicBot(discord.Client):
                                 'timestamp': current_timestamp,
                                 'last_PM': None}
                     await self.dbmessages.insert_one(messagedoc)
+        """
 
         if not message_content.startswith(self.config.command_prefix):
             return
