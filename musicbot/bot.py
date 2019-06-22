@@ -1812,7 +1812,7 @@ class MusicBot(discord.Client):
         pattern = re.compile('<@!?\d{17,18}>')
         for arg in leftover_args:
             if pattern.match(arg):
-                leftover_args.pop(0)
+                leftover_args.remove(arg)
                 log.info(leftover_args)
         return Response(leftover_args, delete_after=60)
 
