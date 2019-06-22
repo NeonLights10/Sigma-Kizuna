@@ -273,8 +273,8 @@ class MusicBot(discord.Client):
         post = {'server_id': id,
                 'autorole': None,
                 'admins': users,
-                'muted': [],
-                'slowmode': 0}
+                'muted': []
+                }
         log.info("Inserting document")
         await self.dbservers.insert_one(post)
 
@@ -3962,9 +3962,8 @@ class MusicBot(discord.Client):
         if int("281807963147075584") in message.raw_mentions and message.author != self.user:
             log.info("Found a mention of myself")  
             msg = await self.get_msgid(message)
-            log.info(msg)
+            log.info("Messaged retrieved: " + msg)
             parsedmessage = re.sub('<@!?\d{18}>', ' ', msg).strip()
-            #log.info("Parsed: " + parsedmessage)
             await self.safe_send_message(message.channel, parsedmessage)
 
         if not message_content.startswith(self.config.command_prefix):
