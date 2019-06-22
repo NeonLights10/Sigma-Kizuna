@@ -1770,33 +1770,69 @@ class MusicBot(discord.Client):
         content.add_field(name="Uptime", value="%d days\n%d hours\n%d minutes" % (day, hour, minutes))
         await self.safe_send_message(channel, content, expire_in=60)
 
-    async def cmd_kick(self, message, guild, user_mentions):
+    async def cmd_kick(self, message, guild, user_mentions, leftover_args):
         """
         Usage:
-            {command_prefix}kick [user mentions]
+            {command_prefix}kick [user mentions] <reason>
 
-        Kick one or multiple users.
+        Kick one or multiple users. Reason (optional) must be in quotes.
         """
+        try:
+            leftover_args = shlex.split(' '.join(leftover_args))
+        except ValueError:
+            raise exceptions.CommandError("Please quote the reason properly", expire_in=30)
+
+        pattern = re.compile('<@!?\d{17,18}>')
+        for x in range(len(leftover_args) - 1):
+            if not pattern.match(leftover_args[x]):
+                raise exceptions.CommandError("Incorrect argument order or too many arguments!", expire_in=30)
+        lcopy = leftover_args[:]
+        for arg in lcopy:
+            if pattern.match(arg):
+                leftover_args.remove(arg)
+
         for user in user_mentions:
             if user != self.user:
                 try:
-                    await guild.kick(user)
+                    if leftover_args:
+                        reason = leftover_args.pop()
+                        await guild.kick(user, reason)
+                    else:
+                        await guild.kick(user)
                 except:
                     raise exceptions.CommandError("Something went wrong!")
             else:
                 raise exceptions.CommandError("Uhh, I can't kick myself...")
 
-    async def cmd_ban(self, message, guild, user_mentions):
+    async def cmd_ban(self, message, guild, user_mentions, leftover_args):
         """
         Usage:
-            {command_prefix}ban [user mentions]
+            {command_prefix}ban [user mentions] <reason>
 
-        Ban one or multiple users. Automatically deletes the past days worth of messages.
+        Ban one or multiple users. Reason (optional) must be in quotes. Automatically deletes the past days worth of messages.
         """
+        try:
+            leftover_args = shlex.split(' '.join(leftover_args))
+        except ValueError:
+            raise exceptions.CommandError("Please quote the reason properly", expire_in=30)
+
+        pattern = re.compile('<@!?\d{17,18}>')
+        for x in range(len(leftover_args) - 1):
+            if not pattern.match(leftover_args[x]):
+                raise exceptions.CommandError("Incorrect argument order or too many arguments!", expire_in=30)
+        lcopy = leftover_args[:]
+        for arg in lcopy:
+            if pattern.match(arg):
+                leftover_args.remove(arg)
+
         for user in user_mentions:
             if user != self.user:
                 try:
-                    await guild.ban(user)
+                    if leftover_args:
+                        reason = leftover_args.pop()
+                        await guild.ban(user, reason)
+                    else:
+                        await guild.ban(user)
                 except:
                     raise exceptions.CommandError("Something went wrong!")
             else:
@@ -1806,7 +1842,7 @@ class MusicBot(discord.Client):
         try:
             leftover_args = shlex.split(' '.join(leftover_args))
         except ValueError:
-            raise exceptions.CommandError("Please quote the query properly", expire_in=30)
+            raise exceptions.CommandError("Please quote the reason properly", expire_in=30)
         log.info(leftover_args)
 
         pattern = re.compile('<@!?\d{17,18}>')
@@ -1818,6 +1854,7 @@ class MusicBot(discord.Client):
             if pattern.match(arg):
                 leftover_args.remove(arg)
                 log.info(leftover_args)
+
         return Response(' '.join(leftover_args), delete_after=60)
 
     async def cmd_slowmode(self, channel, time=None):
