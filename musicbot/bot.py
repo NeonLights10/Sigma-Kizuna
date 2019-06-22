@@ -1863,6 +1863,7 @@ class MusicBot(discord.Client):
                     raise exceptions.CommandError("Invalid argument specified. Did you enter a number?", expire_in=20)
                 if time <= 0:
                     raise exceptions.CommandError("Invalid time specified! Please give a time in seconds.")
+                else:    
                     try:
                         await channel.edit(slowmode_delay = time)
                     except:
