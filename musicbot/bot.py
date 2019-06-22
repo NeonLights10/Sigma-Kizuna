@@ -1608,23 +1608,29 @@ class MusicBot(discord.Client):
         else:
             raise exceptions.CommandError("You did not specify a from timezone!")
 
-    async def cmd_addrole(self, message, author, guild, mentions, leftover_args):
+    async def cmd_addrole(self, message, author, guild, user_mentions, leftover_args):
         """
         Usage:
             {command_prefix}addrole [user mentions] [rolename]
 
-        Adds selected members to a new role (role created with name specified). User mentions are optional.
+        Adds selected members to a new role (name must be placed in quotes). User mentions are optional.
         """
+        try:
+            leftover_args = shlex.split(' '.join(leftover_args))
+        except ValueError:
+            raise exceptions.CommandError("Please quote the role properly", expire_in=30)
 
-        args = ' '.join(leftover_args)
-        log.info(args)
-        #This is actually the most jenky way to deal with whatever the fudge this bot handles leftover args, but I have no better ideas right now.
-        parsedargs = re.sub('<@!?\d{17,18}>', '', args).strip()
-        log.info(parsedargs)
-        if parsedargs:
-            rolename = parsedargs
-        else:
-            raise exceptions.CommandError("Invalid arguments specified, or order is incorrect!")
+        if mentions:
+            pattern = re.compile('<@!?\d{17,18}>')
+            for x in range(len(leftover_args) - 1):
+                if not pattern.match(leftover_args[x]):
+                    raise exceptions.CommandError("Incorrect argument order or too many arguments!", expire_in=30)
+            lcopy = leftover_args[:]
+            for arg in lcopy:
+                if pattern.match(arg):
+                    leftover_args.remove(arg)
+
+        rolename = leftover_args.pop()
         
         role_permissions = guild.default_role
         role_permissions = role_permissions.permissions
@@ -1640,7 +1646,7 @@ class MusicBot(discord.Client):
         except:
             log.error("Could not move role.")
 
-        if message.mentions:
+        if mentions:
             for member in message.mentions:
                 try:
                     await member.add_roles(role)
