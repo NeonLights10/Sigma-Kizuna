@@ -1824,10 +1824,10 @@ class MusicBot(discord.Client):
                     if leftover_args:
                         reason = leftover_args.pop()
                         await guild.kick(user, reason=reason)
-                        return Response("*{}* (User ID: {}) was kicked from the server. *Reason:* {}".format(user.name, user.id, reason))
+                        return Response("**{}** (User ID: {}) was kicked from the server. **Reason:** {}".format(user.name, user.id, reason))
                     else:
                         await guild.kick(user)
-                        return Response("*{}* (User ID: {}) was kicked from the server.".format(user.name, user.id))
+                        return Response("**{}** (User ID: {}) was kicked from the server.".format(user.name, user.id))
 
                 except:
                     raise exceptions.CommandError("Something went wrong!", expire_in=30)
@@ -1861,10 +1861,10 @@ class MusicBot(discord.Client):
                     if leftover_args:
                         reason = leftover_args.pop()
                         await guild.ban(user, reason=reason)
-                        return Response("*{}* (User ID: {}) was banned from the server. *Reason:* {}".format(user.name, user.id, reason))
+                        return Response("**{}** (User ID: {}) was banned from the server. **Reason:** {}".format(user.name, user.id, reason))
                     else:
                         await guild.ban(user)
-                        return Response("*{}* (User ID: {}) was banned from the server.".format(user.name, user.id))
+                        return Response("**{}** (User ID: {}) was banned from the server.".format(user.name, user.id))
                 except:
                     raise exceptions.CommandError("Something went wrong!", expire_in=30)
             else:
