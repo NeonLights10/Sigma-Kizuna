@@ -1807,12 +1807,14 @@ class MusicBot(discord.Client):
             leftover_args = shlex.split(' '.join(leftover_args))
         except ValueError:
             raise exceptions.CommandError("Please quote the query properly", expire_in=30)
+        log.info(leftover_args)
 
         pattern = re.compile('<@!?\d{17,18}>')
         for arg in leftover_args:
             if pattern.match(arg):
                 leftover_args.pop(0)
-        return Response(leftover_args)
+                log.info(leftover_args)
+        return Response(leftover_args, delete_after=60)
 
     async def cmd_slowmode(self, channel, time=None):
         """
