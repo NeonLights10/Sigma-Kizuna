@@ -1608,7 +1608,7 @@ class MusicBot(discord.Client):
         else:
             raise exceptions.CommandError("You did not specify a from timezone!")
 
-    async def cmd_addrole(self, message, author, guild, user_mentions, leftover_args):
+    async def cmd_addrole(self, message, author, guild, mentions, leftover_args):
         """
         Usage:
             {command_prefix}addrole [user mentions] [rolename]
