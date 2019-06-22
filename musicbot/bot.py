@@ -1710,7 +1710,7 @@ class MusicBot(discord.Client):
 
                 role_name = leftover_args.pop()
                     
-                role = discord.utils.find(lambda r: r.name == name, guild.roles)
+                role = discord.utils.find(lambda r: r.name == role_name, guild.roles)
                 if role:
                     for user in user_mentions:
                         try:
@@ -1756,7 +1756,7 @@ class MusicBot(discord.Client):
 
                 role_name = leftover_args.pop()
                     
-                role = discord.utils.find(lambda r: r.name == name, guild.roles)
+                role = discord.utils.find(lambda r: r.name == role_name, guild.roles)
                 if role:
                     for user in user_mentions:
                         try:
