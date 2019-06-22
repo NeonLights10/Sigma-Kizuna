@@ -1796,7 +1796,7 @@ class MusicBot(discord.Client):
                 try:
                     if leftover_args:
                         reason = leftover_args.pop()
-                        await guild.kick(user, reason)
+                        await guild.kick(user, reason=reason)
                     else:
                         await guild.kick(user)
                 except:
@@ -1830,7 +1830,7 @@ class MusicBot(discord.Client):
                 try:
                     if leftover_args:
                         reason = leftover_args.pop()
-                        await guild.ban(user, reason)
+                        await guild.ban(user, reason=reason)
                     else:
                         await guild.ban(user)
                 except:
