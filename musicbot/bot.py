@@ -1797,8 +1797,11 @@ class MusicBot(discord.Client):
                     if leftover_args:
                         reason = leftover_args.pop()
                         await guild.kick(user, reason=reason)
+                        return Response("{} (User ID: {}) was kicked from the server. Reason: {}".format(user.name, user.id, reason))
                     else:
                         await guild.kick(user)
+                        return Response("{} (User ID: {}) was kicked from the server.".format(user.name, user.id))
+
                 except:
                     raise exceptions.CommandError("Something went wrong!")
             else:
