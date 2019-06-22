@@ -1810,6 +1810,9 @@ class MusicBot(discord.Client):
         log.info(leftover_args)
 
         pattern = re.compile('<@!?\d{17,18}>')
+        for x in range(len(leftover_args) - 1):
+            if not pattern.match(leftover_args[x]):
+                raise exceptions.CommandError("Incorrect parameter order!", expire_in=30)
         lcopy = leftover_args[:]
         for arg in lcopy:
             if pattern.match(arg):
