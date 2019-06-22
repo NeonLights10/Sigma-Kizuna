@@ -1803,7 +1803,16 @@ class MusicBot(discord.Client):
                 raise exceptions.CommandError("Uhh, I can't ban myself...")
 
     async def cmd_testparameter(self, message, leftover_args):
-        return Response('{} arguments: {}'.format(len(leftover_args), ', '.join(leftover_args)))
+        try:
+            leftover_args = shlex.split(' '.join(leftover_args))
+        except ValueError:
+            raise exceptions.CommandError("Please quote the query properly"), expire_in=30)
+
+        pattern = re.compile('<@!?\d{17,18}>')
+        for arg in leftover_args:
+            if pattern.match(arg):
+                leftover_args.pop(0)
+        return Response(leftover_args)
 
     async def cmd_slowmode(self, channel, time=None):
         """
