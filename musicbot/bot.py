@@ -113,7 +113,6 @@ class MusicBot(discord.Client):
         self.mclient = motor.motor_asyncio.AsyncIOMotorClient()
         self.db = self.mclient[self.database_name]
         self.dbservers = self.db.servers
-        self.dbmessages = self.db.messages
         self.dbmsgid = self.db.msgid
 
         log.info('Starting Sigma {}'.format(BOTVERSION))
@@ -1797,15 +1796,15 @@ class MusicBot(discord.Client):
                     if leftover_args:
                         reason = leftover_args.pop()
                         await guild.kick(user, reason=reason)
-                        return Response("{} (User ID: {}) was kicked from the server. Reason: {}".format(user.name, user.id, reason))
+                        return Response("*{}* (User ID: {}) was kicked from the server. *Reason:* {}".format(user.name, user.id, reason))
                     else:
                         await guild.kick(user)
-                        return Response("{} (User ID: {}) was kicked from the server.".format(user.name, user.id))
+                        return Response("*{}* (User ID: {}) was kicked from the server.".format(user.name, user.id))
 
                 except:
-                    raise exceptions.CommandError("Something went wrong!")
+                    raise exceptions.CommandError("Something went wrong!", expire_in=30)
             else:
-                raise exceptions.CommandError("Uhh, I can't kick myself...")
+                raise exceptions.CommandError("Uhh, I can't kick myself...", expire_in=30)
 
     async def cmd_ban(self, message, guild, user_mentions, leftover_args):
         """
@@ -1834,31 +1833,14 @@ class MusicBot(discord.Client):
                     if leftover_args:
                         reason = leftover_args.pop()
                         await guild.ban(user, reason=reason)
+                        return Response("*{}* (User ID: {}) was banned from the server. *Reason:* {}".format(user.name, user.id, reason))
                     else:
                         await guild.ban(user)
+                        return Response("*{}* (User ID: {}) was banned from the server.".format(user.name, user.id))
                 except:
-                    raise exceptions.CommandError("Something went wrong!")
+                    raise exceptions.CommandError("Something went wrong!", expire_in=30)
             else:
-                raise exceptions.CommandError("Uhh, I can't ban myself...")
-
-    async def cmd_testparameter(self, message, leftover_args):
-        try:
-            leftover_args = shlex.split(' '.join(leftover_args))
-        except ValueError:
-            raise exceptions.CommandError("Please quote the reason properly", expire_in=30)
-        log.info(leftover_args)
-
-        pattern = re.compile('<@!?\d{17,18}>')
-        for x in range(len(leftover_args) - 1):
-            if not pattern.match(leftover_args[x]):
-                raise exceptions.CommandError("Incorrect parameter order!", expire_in=30)
-        lcopy = leftover_args[:]
-        for arg in lcopy:
-            if pattern.match(arg):
-                leftover_args.remove(arg)
-                log.info(leftover_args)
-
-        return Response(' '.join(leftover_args), delete_after=60)
+                raise exceptions.CommandError("Uhh, I can't ban myself...", expire_in=30)
 
     async def cmd_slowmode(self, channel, time=None):
         """
@@ -1870,7 +1852,7 @@ class MusicBot(discord.Client):
         if time:
             if time.lower() == "off":
                 try:
-                    channel.slowmode_delay = 0
+                    await channel.edit(slowmode_delay = 0)
                 except:
                     raise exceptions.CommandError("Couldn't turn off slowmode! I might not have permissions to do so.")
                 return Response("Slowmode has been disabled for " + channel.name, reply=False, delete_after=30)
@@ -1882,7 +1864,7 @@ class MusicBot(discord.Client):
                 if time <= 0:
                     raise exceptions.CommandError("Invalid time specified! Please give a time in seconds.")
                     try:
-                        channel.slowmode_delay = time
+                        await channel.edit(slowmode_delay = time)
                     except:
                         raise exceptions.CommandError("Couldn't set slowmode! I might not have permissions to do so.")
                 return Response("Slowmode has been enabled in " + channel.name, reply=False, delete_after=30)           
@@ -3955,46 +3937,6 @@ class MusicBot(discord.Client):
             parsedmessage = re.sub('<@!?\d{18}>', ' ', msg).strip()
             #log.info("Parsed: " + parsedmessage)
             await self.safe_send_message(message.channel, parsedmessage)
-
-        """
-        #let's deal with slowmode stuff before we deal with any commands
-        try:
-            document = await self.dbservers.find_one({"server_id": message.guild.id})
-        except:
-            #fixes a weird bug but also ensures that a server not in the database doesn't raise exceptions 
-            document = None
-        #is slowmode on?
-        if document and document['slowmode'] != 0:
-            #Check if the user who sent the message should be affected by slowmode
-            if message.author.id not in document['admins'] and message.author.id != self.user.id:
-                messagedoc = await self.dbmessages.find_one({"server_id": message.guild.id, "user": message.author.id})
-                #Have they talked during slowmode? If so, let's check the timestamp. If not, add them to the list.
-                if messagedoc:
-                    if (current_timestamp - messagedoc['timestamp']).seconds <= document['slowmode']:
-                        log.info("A message was deleted due to slow mode.")
-                        if messagedoc['last_PM']:
-                            if (current_timestamp - messagedoc['last_PM'] > 300):
-                                await self.safe_send_message(message.author, "Your messages have been removed. The server is currently in slow mode. Please wait " + str((current_timestamp - messagedoc['timestamp']).seconds) + " seconds before trying to send a message again.")
-                                await self.dbmessages.update_one({"server_id": message.guild.id, "user": message.author.id}, {"$set": {'last_PM': current_timestamp}})
-                        else:
-                            await self.safe_send_message(message.author, "Your messages have been removed. The server is currently in slow mode. Please wait " + str((current_timestamp - messagedoc['timestamp']).seconds) + " seconds before trying to send a message again.")
-                            await self.dbmessages.update_one({"server_id": message.guild.id, "user": message.author.id}, {"$set": {'last_PM': current_timestamp}})  
-                        def user_check(m):
-                            return m.author == message.author
-                        await channel.purge(after=messagedoc['timestamp'], check=user_check)
-                        return
-                    else:
-                        #The timer has passed so they can speak, but let's restart it
-                        await self.dbmessages.update_one({"server_id": message.guild.id, "user": message.author.id}, {"$set": {'timestamp': current_timestamp}})
-                else:
-                    #Let's create a new timestamp entry for this user.
-                    log.info("Storing new user in message collection")
-                    messagedoc={'server_id': message.guild.id,
-                                'user': message.author.id,
-                                'timestamp': current_timestamp,
-                                'last_PM': None}
-                    await self.dbmessages.insert_one(messagedoc)
-        """
 
         if not message_content.startswith(self.config.command_prefix):
             return
