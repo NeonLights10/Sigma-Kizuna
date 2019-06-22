@@ -17,7 +17,6 @@ import urllib
 import errno
 import psutil
 
-import aiohttp
 import discord
 import colorlog
 import motor.motor_asyncio
@@ -65,7 +64,7 @@ def find_key(dic, val):
 class MusicBot(discord.Client):
     def __init__(self, config_file=None, perms_file=None, aliases_file=None):
         try:
-            sys.stdout.write("\x1b]2;Sigma {}\x07".format(BOTVERSION))
+            sys.stdout.write("\x1b]2;RuRune {}\x07".format(BOTVERSION))
         except:
             pass
 
@@ -115,7 +114,7 @@ class MusicBot(discord.Client):
         self.dbservers = self.db.servers
         self.dbmsgid = self.db.msgid
 
-        log.info('Starting Sigma {}'.format(BOTVERSION))
+        log.info('Starting RuRune {}'.format(BOTVERSION))
 
         if not self.autoplaylist:
             log.warning("Autoplaylist is empty, disabling.")
@@ -1194,151 +1193,11 @@ class MusicBot(discord.Client):
     def _gen_embed(self):
         """Provides a basic template for embeds"""
         e = discord.Embed(colour=0x1abc9c)
-        e.set_author(name="Sigma v{}".format(BOTVERSION), icon_url=self.user.avatar_url)
+        e.set_author(name="RuRune v{}".format(BOTVERSION), icon_url=self.user.avatar_url)
         e.set_footer(text="Sugoi!")
         return e
 
 #######################################################
-
-    async def cmd_hello(self, author):
-        """
-        Usage:
-            {command_prefix}hello
-        Talk to Sigma-chan!    
-        """
-        msg = "Hello %s! How are you doing today?" % author.mention
-        return Response(msg, reply=False, delete_after=30)
-
-    async def _cmd_get_gif(self, type, msg):
-        async with aiohttp.ClientSession() as session:
-            async with session.get('https://nekos.life/api/v2/img/{}'.format(type)) as resp:
-                if resp.status == 200:
-                    rjson = await resp.json()
-                    content = discord.Embed(colour=0x1abc9c)
-                    content.set_footer(text="Sugoi!")
-                    url = rjson.get('url')
-                    #something something 2 positional parameters so i have to do this extra variable assignment
-                    content.set_image(url=url)
-                    content.description = msg
-                    return content
-                else:
-                    raise exceptions.CommandError("The API returned a status code of {}. This might mean that the service is unavailable at this time. Try again later?".format(resp.status))
-
-    async def cmd_hug(self, channel, author, user_mentions):
-        """
-        Usage:
-            {command_prefix}hug [recipients]
-        Hug somebody!
-        If no recipient is specified, Sigma-chan will hug you <3
-        """
-        if user_mentions and len(user_mentions) == 1:
-            msg = "{0} hugged {1}!".format(author.mention, user_mentions[0].mention)
-        elif user_mentions and len(user_mentions) > 1:
-            msg = "{0} hugged ".format(author.mention)
-            if len(user_mentions) == 2:
-                msg += "{0} ".format(user_mentions[0].mention)
-            else:
-                for i in range(len(user_mentions) - 1):
-                    msg += "{0}, ".format(user_mentions[i].mention)
-            msg += "and {0}".format(user_mentions[len(user_mentions) - 1].mention)
-        else:
-            msg = self.user.name + " gives {} a soft hug :heart:".format(author.mention)
-
-        content = await self._cmd_get_gif("hug", msg)
-        return Response(content, reply=False, delete_after=45)
-
-    async def cmd_cuddle(self, channel, author, user_mentions):
-        """
-        Usage:
-            {command_prefix}cuddle [recipients]
-        Cuddle somebody!
-        If no recipient is specified, Sigma-chan will cuddle you <3
-        """
-        if user_mentions and len(user_mentions) == 1:
-            msg = "{0} cuddles {1}!".format(author.mention, user_mentions[0].mention)
-        elif user_mentions and len(user_mentions) > 1:
-            msg = "{0} cuddles ".format(author.mention)
-            if len(user_mentions) == 2:
-                msg += "{0} ".format(user_mentions[0].mention)
-            else:
-                for i in range(len(user_mentions) - 1):
-                    msg += "{0}, ".format(user_mentions[i].mention)
-            msg += "and {0}".format(user_mentions[len(user_mentions) - 1].mention)
-        else:
-            msg = self.user.name + " takes a minute to cuddle {} :heart:".format(author.mention)
-
-        content = await self._cmd_get_gif("cuddle", msg)
-        return Response(content, reply=False, delete_after=45)
-
-    async def cmd_poke(self, channel, author, user_mentions):
-        """
-        Usage:
-            {command_prefix}poke [recipients]
-        Poke somebody!
-        If no recipient is specified, Sigma-chan will poke you :P
-        """
-        if user_mentions and len(user_mentions) == 1:
-            msg = "{0} poked {1}!".format(author.mention, user_mentions[0].mention)
-        elif user_mentions and len(user_mentions) > 1:
-            msg = "{0} poked ".format(author.mention)
-            if len(user_mentions) == 2:
-                msg += "{0} ".format(user_mentions[0].mention)
-            else:
-                for i in range(len(user_mentions) - 1):
-                    msg += "{0}, ".format(user_mentions[i].mention)
-            msg += "and {0}".format(user_mentions[len(user_mentions) - 1].mention)
-        else:
-            msg = self.user.name + " pokes you :stuck_out_tongue_closed_eyes:"
-
-        content = await self._cmd_get_gif("poke", msg)
-        return Response(content, reply=False, delete_after=45)
-
-    async def cmd_headpat(self, channel, author, user_mentions):
-        """
-        Usage:
-            {command_prefix}headpat [recipients]
-        Headpat somebody!
-        If no recipient is specified, Sigma-chan will pat you <3
-        """
-        if user_mentions and len(user_mentions) == 1:
-            msg = "{0} gave {1} a headpat!".format(author.mention, user_mentions[0].mention)
-        elif user_mentions and len(user_mentions) > 1:
-            msg = "{0} gave ".format(author.mention)
-            if len(user_mentions) == 2:
-                msg += "{0} ".format(user_mentions[0].mention)
-            else:
-                for i in range(len(user_mentions) - 1):
-                    msg += "{0}, ".format(user_mentions[i].mention)
-            msg += "and {0} a headpat".format(user_mentions[len(user_mentions) - 1].mention)
-        else:
-            msg = self.user.name + " gives {} a small headpat :heart:".format(author.mention)
-
-        content = await self._cmd_get_gif("pat", msg)
-        return Response(content, reply=False, delete_after=45)
-
-    async def cmd_yikes(self, message):
-        return Response("Yikes! 😬", reply=False, delete_after=30)
-
-    async def cmd_shrug(self, message):
-        return Response("¯\_(ツ)_/¯", reply=False, delete_after=30)
-
-    async def cmd_roll(self, author, num=None):
-        """
-        Usage:
-            {command_prefix}roll [number]
-            Get a random number from 0-100. If a number is specified, it will do from 0 to that number isntead.
-        """
-        if num:
-            try:
-                num = int(num)
-                answer = random.randint(0, num)
-                msg = "{} rolled a {}".format(author.mention, str(answer)) 
-                return Response(msg, reply=False, delete_after=30)
-            except ValueError:
-                pass
-        answer = random.randint(0, 100)
-        msg = "{} rolled a {}".format(author.mention, str(answer))
-        return Response(msg, reply=False, delete_after=30)
 
     async def cmd_screenshare(self, guild, author):
         if author.voice:
@@ -1776,7 +1635,7 @@ class MusicBot(discord.Client):
         Displays bot stats.
         """
         content = discord.Embed(colour=0x1abc9c)
-        content.set_author(name="Sigma v" + BOTVERSION, icon_url=self.user.avatar_url)
+        content.set_author(name="RuRune v" + BOTVERSION, icon_url=self.user.avatar_url)
         content.set_footer(text="Sugoi!")
         content.set_thumbnail(url=self.user.avatar_url)
         content.add_field(name="Author", value="Neon#4792")
@@ -3908,6 +3767,7 @@ class MusicBot(discord.Client):
 
     async def on_member_join(self, member):
         log.info("A new member joined in {}".format(member.guild.name))
+
         document = await self.dbservers.find_one({"server_id": str(member.guild.id)})
         log.info(document['autorole'])
         if document['autorole']:
@@ -3917,8 +3777,21 @@ class MusicBot(discord.Client):
                 log.info("Auto-assigned role to new member in {}".format(member.guild.name))
             else:
                 raise ValueError("Auto-assign role does not exist!")
-        else:
-            raise exceptions.CommandError("This guild's autorole has not been assigned, or it has never been activated.")
+        await self.safe_send_message(member.guild.get_channel(201960084568276992), "Istariana vilseriol <@{}>! Welcome to the Alice in Dissonance Discord server. Please read our <#206718758574751754>, thank you. :EmbarrassedRune:".format(member.id))
+    
+    async def on_member_remove(self, member):
+        await self.safe_send_message(member.guild.get_channel(201960084568276992), "Farewell {}!".format(member.name))
+
+    async def on_message_delete(self, message):
+        recordChannel = message.guild.get_channel(self.config.recordmsg)
+        await self.safe_send_message(recordChannel, "**{}{}** (ID {}) message has been deleted from **#{}:**".format(message.author.id, message.author.discriminator, message.channel.name))
+        await self.safe_send_message(recordChannel, "**Message:** {}".format(message.content))
+
+    async def on_message_edit(self, before, after):
+        recordChannel = before.guild.get_channel(self.config.recordmsg)
+        await self.safe_send_message(recordChannel, "**{}{}** (ID {}) message has been edited in **#{}:**".format(before.author.id, before.author.discriminator, before.channel.name))
+        await self.safe_send_message(recordChannel, "**Old Message:** {}".format(before.content))
+        await self.safe_send_message(recordChannel, "**New Message:** {}".format(after.content))
 
 #############################################
 
