@@ -1608,7 +1608,7 @@ class MusicBot(discord.Client):
         else:
             raise exceptions.CommandError("You did not specify a from timezone!")
 
-    async def cmd_addrole(self, message, author, guild, mentions, leftover_args):
+    async def cmd_addrole(self, message, author, guild, user_mentions, leftover_args):
         """
         Usage:
             {command_prefix}addrole [user mentions] [rolename]
@@ -1622,7 +1622,7 @@ class MusicBot(discord.Client):
                 raise exceptions.CommandError("Please quote the role properly", expire_in=30)
         log.info(leftover_args)
 
-        if mentions:
+        if user_mentions:
             pattern = re.compile('<@!?\d{17,18}>')
             for x in range(len(leftover_args) - 1):
                 if not pattern.match(leftover_args[x]):
@@ -1650,10 +1650,10 @@ class MusicBot(discord.Client):
         except:
             log.error("Could not move role.")
 
-        if mentions:
-            for member in message.mentions:
+        if user_mentions:
+            for user in user_mentions:
                 try:
-                    await member.add_roles(role)
+                    await user.add_roles(role)
                 except:
                     raise exceptions.CommandError("Role created, but failed to add %s to the role." % member.name);
         return Response("Created role and added %s member(s)!" % len(message.mentions), delete_after=30)
