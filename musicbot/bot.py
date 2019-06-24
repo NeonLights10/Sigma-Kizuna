@@ -16,6 +16,7 @@ import random
 import urllib
 import errno
 import psutil
+import aiohttp
 
 import discord
 import colorlog
