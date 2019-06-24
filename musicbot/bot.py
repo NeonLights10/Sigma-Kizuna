@@ -1353,6 +1353,7 @@ class MusicBot(discord.Client):
         Enables auto assign role with a specific role. Server specific.
         Owner only.
         """
+        log.info(len(leftover_args))
         if len(leftover_args) == 1:
             if leftover_args[0][0] in '\'"':
                     lchar = leftover_args[0][0]
@@ -1362,7 +1363,7 @@ class MusicBot(discord.Client):
                 raise exceptions.CommandError("Please quote the role properly", expire_in=20)
 
             role = leftover_args.pop()  
-            
+
             if role.lower() == "off":
                 await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'autorole': None}})
                 return Response("Autorole disabled", reply=False, delete_after=20)
