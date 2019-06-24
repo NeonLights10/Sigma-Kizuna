@@ -1627,7 +1627,7 @@ class MusicBot(discord.Client):
         """
         try:
             leftover_args = shlex.split(' '.join(leftover_args))
-            log.info(' '.join(leftover_args))
+            log.info(leftover_args)
         except ValueError:
             raise exceptions.CommandError("Please quote the role properly", expire_in=30)
         
@@ -1639,7 +1639,7 @@ class MusicBot(discord.Client):
         else:
             raise exceptions.CommandError("Please quote the role properly", expire_in=30)
         '''
-        
+
         if user_mentions:
             pattern = re.compile('<@!?\d{17,18}>')
             for x in range(len(leftover_args) - 1):
