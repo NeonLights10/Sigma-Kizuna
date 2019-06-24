@@ -3923,14 +3923,14 @@ class MusicBot(discord.Client):
 #############################################
 
     async def get_msgid(self, message, attempts = 1):
-        pipeline = [{'$match': {'$and': [{'server_id': message.guild.id}, {'author_id': {'$not': {'$regex': '281807963147075584'}}}] }}, {'$sample': {'size': 1}}]
+        pipeline = [{'$match': {'$and': [{'server_id': message.guild.id}, {'author_id': {'$not': {'$regex': str(self.user.id)}}}] }}, {'$sample': {'size': 1}}]
         async for msgid in self.dbmsgid.aggregate(pipeline):
                 for channel in message.guild.channels:
                     if channel.id == msgid['channel_id']:
                         try:
                             msg = await channel.fetch_message(msgid['msg_id'])
                             #log.info(msg.content)
-                            if (re.match('^%|\$|!|@', msg.content) == None) and (re.match('<@!?281807963147075584>', msg.content) == None) and (len(msg.embeds) == 0) and (msg.author.bot == False):
+                            if (re.match('^%|\$|!|@', msg.content) == None) and (re.match('<@!?{}>'.format(self.user.id), msg.content) == None) and (len(msg.embeds) == 0) and (msg.author.bot == False):
                                 #log.info("Message is ok")
                                 log.info("Attempts taken:{}".format(attempts))
                                 log.info("Message ID:{}".format(msg.id))
@@ -3959,7 +3959,7 @@ class MusicBot(discord.Client):
 
         message_content = message.content.strip()
 
-        if int("281807963147075584") in message.raw_mentions and message.author != self.user:
+        if self.user.id in message.raw_mentions and message.author != self.user:
             log.info("Found a mention of myself")  
             msg = await self.get_msgid(message)
             log.info("Messaged retrieved: " + msg)
