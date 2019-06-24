@@ -1394,8 +1394,7 @@ class MusicBot(discord.Client):
             except discord.Forbidden:
                 raise exceptions.CommandError("It seems like I don't have the permissions to do that. Check your server settings?", expire_in=20)
         else:
-            raise exceptions.CommandError("Specify a message ID!")
-                
+            raise exceptions.CommandError("Specify a message ID!", expire_in=20)
 
     async def cmd_purge(self, channel, message, user_mentions, leftover_args, num = None, usermentions = None):
         """
@@ -3911,7 +3910,7 @@ class MusicBot(discord.Client):
         if document['autorole']:
             role = discord.utils.find(lambda r: r.name == document['autorole'], member.guild.roles)
             if role:
-                await self.add_roles(member, role)
+                await member.add_roles(member, role)
                 log.info("Auto-assigned role to new member in {}".format(member.guild.name))
             else:
                 raise ValueError("Auto-assign role does not exist!")
