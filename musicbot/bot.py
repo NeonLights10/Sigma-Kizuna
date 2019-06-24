@@ -1206,27 +1206,31 @@ class MusicBot(discord.Client):
         else:
             raise exceptions.CommandError("You are not in a voice channel!")
 
-    async def cmd_aar(self, guild, role=None):
+    async def cmd_aar(self, guild, leftover_args):
         """
         Usage:
             {command_prefix}aar [role name]
         Enables auto assign role with a specific role. Server specific.
         Owner only.
         """
-        if role:   
-            if role.lower() == "off":
-                await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'autorole': None}})
-                return Response("Autorole disabled", reply=False, delete_after=20)
-            #Let's find the role
-            role = discord.utils.find(lambda r: r.name == role, guild.roles)
-            if role:
-                await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'autorole': role.name}})
-                return Response("Enabled autorole in {0} using role {1}".format(guild,role), reply=False, delete_after=20)
-            else:
-                #oops, can't find that role. Try again
-                raise exceptions.CommandError("Invalid role specified.", expire_in=20)
+        try:
+            leftover_args = shlex.split(' '.join(leftover_args))
+        except ValueError:
+            raise exceptions.CommandError("Please quote the role properly", expire_in=30)
+
+        role = leftover_args.pop()  
+
+        if role.lower() == "off":
+            await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'autorole': None}})
+            return Response("Autorole disabled", reply=False, delete_after=20)
+        #Let's find the role
+        role = discord.utils.find(lambda r: r.name == role, guild.roles)
+        if role:
+            await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'autorole': role.name}})
+            return Response("Enabled autorole in {0} using role {1}".format(guild,role), reply=False, delete_after=20)
         else:
-            raise exceptions.CommandError("No argument specified.", expire_in=20)
+            #oops, can't find that role. Try again
+            raise exceptions.CommandError("Invalid role specified.", expire_in=20)
 
     async def cmd_purgeid(self, channel, message, msg_id = None):
         """
@@ -1475,16 +1479,10 @@ class MusicBot(discord.Client):
 
         Adds selected members to a new role (name must be placed in quotes). User mentions are optional.
         """
-        if len(leftover_args) > 1:
-            try:
-                leftover_args = shlex.split(' '.join(leftover_args))
-            except ValueError:
-                raise exceptions.CommandError("Please quote the role properly", expire_in=30)
-        else:
-            if leftover_args[0][0] in '\'"':
-                lchar = leftover_args[0][0]
-                leftover_args[0] = leftover_args[0].lstrip(lchar)
-                leftover_args[-1] = leftover_args[-1].rstrip(lchar)
+        try:
+            leftover_args = shlex.split(' '.join(leftover_args))
+        except ValueError:
+            raise exceptions.CommandError("Please quote the role properly", expire_in=30)
 
         if user_mentions:
             pattern = re.compile('<@!?\d{17,18}>')
@@ -3772,9 +3770,9 @@ class MusicBot(discord.Client):
         document = await self.dbservers.find_one({"server_id": member.guild.id})
         #log.info(document['autorole'])
         if document['autorole']:
-            role = discord.utils.find(lambda r: r.name == document['autorole'], member.guild.roles)
+            role = discord.utils.find(lambda r: r.name == str(document['autorole']), member.guild.roles)
             if role:
-                await self.add_roles(member, role)
+                await self.add_roles(role)
                 log.info("Auto-assigned role to new member in {}".format(member.guild.name))
             else:
                 raise ValueError("Auto-assign role does not exist!")
