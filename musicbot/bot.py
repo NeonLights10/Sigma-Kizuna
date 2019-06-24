@@ -3906,7 +3906,7 @@ class MusicBot(discord.Client):
 
     async def on_member_join(self, member):
         log.info("A new member joined in {}".format(member.guild.name))
-        document = await self.dbservers.find_one({"server_id": str(member.guild.id)})
+        document = await self.dbservers.find_one({"server_id": member.guild.id})
         log.info(document['autorole'])
         if document['autorole']:
             role = discord.utils.find(lambda r: r.name == document['autorole'], member.guild.roles)
