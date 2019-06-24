@@ -1631,14 +1631,15 @@ class MusicBot(discord.Client):
         except ValueError:
             raise exceptions.CommandError("Please quote the role properly", expire_in=30)
         
-        if leftover_args[0][0] in '\'"':
+        '''if leftover_args[0][0] in '\'"':
             lchar = leftover_args[0][0]
             leftover_args[0] = leftover_args[0].lstrip(lchar)
             leftover_args[-1] = leftover_args[-1].rstrip(lchar)
             log.info(' '.join(leftover_args))
         else:
             raise exceptions.CommandError("Please quote the role properly", expire_in=30)
-
+        '''
+        
         if user_mentions:
             pattern = re.compile('<@!?\d{17,18}>')
             for x in range(len(leftover_args) - 1):
