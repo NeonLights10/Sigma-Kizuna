@@ -3769,8 +3769,8 @@ class MusicBot(discord.Client):
     async def on_member_join(self, member):
         log.info("A new member joined in {}".format(member.guild.name))
 
-        document = await self.dbservers.find_one({"server_id": str(member.guild.id)})
-        log.info(document['autorole'])
+        document = await self.dbservers.find_one({"server_id": member.guild.id})
+        #log.info(document['autorole'])
         if document['autorole']:
             role = discord.utils.find(lambda r: r.name == document['autorole'], member.guild.roles)
             if role:
@@ -3778,21 +3778,23 @@ class MusicBot(discord.Client):
                 log.info("Auto-assigned role to new member in {}".format(member.guild.name))
             else:
                 raise ValueError("Auto-assign role does not exist!")
-        await self.safe_send_message(member.guild.get_channel(self.config.welcomemsg), "Istariana vilseriol <@{}>! Welcome to the Alice in Dissonance Discord server. Please read our <#206718758574751754>, thank you. :EmbarrassedRune:".format(member.id))
+        await self.safe_send_message(member.guild.get_channel(int(self.config.welcomemsg)), "Istariana vilseriol <@{}>! Welcome to the Alice in Dissonance Discord server. Please read our <#206718758574751754>, thank you. :EmbarrassedRune:".format(member.id))
     
     async def on_member_remove(self, member):
-        await self.safe_send_message(member.guild.get_channel(self.config.welcomemsg), "Farewell {}!".format(member.name))
+        await self.safe_send_message(member.guild.get_channel(int(self.config.welcomemsg)), "Farewell {}!".format(member.name))
 
     async def on_message_delete(self, message):
-        recordChannel = message.guild.get_channel(self.config.recordmsg)
-        await self.safe_send_message(recordChannel, "**{}{}** (ID {}) message has been deleted from **#{}:**".format(message.author.id, message.author.discriminator, message.channel.name))
-        await self.safe_send_message(recordChannel, "**Message:** {}".format(message.content))
+        if message.author.id not self.user.id:
+            recordChannel = message.guild.get_channel(int(self.config.recordmsg))
+            await self.safe_send_message(recordChannel, "**{}#{}** (ID: {}) message has been deleted from **#{}:**".format(message.author.id, message.author.discriminator, message.channel.name))
+            await self.safe_send_message(recordChannel, "**Message:** {}".format(message.content))
 
     async def on_message_edit(self, before, after):
-        recordChannel = before.guild.get_channel(self.config.recordmsg)
-        await self.safe_send_message(recordChannel, "**{}{}** (ID {}) message has been edited in **#{}:**".format(before.author.id, before.author.discriminator, before.channel.name))
-        await self.safe_send_message(recordChannel, "**Old Message:** {}".format(before.content))
-        await self.safe_send_message(recordChannel, "**New Message:** {}".format(after.content))
+        if before.author.id not self.user.id:
+            recordChannel = before.guild.get_channel(int(self.config.recordmsg))
+            await self.safe_send_message(recordChannel, "**{}#{}** (ID: {}) message has been edited in **#{}:**".format(before.author.name, before.author.discriminator, before.author.id, before.channel.name))
+            await self.safe_send_message(recordChannel, "**Old Message:** {}".format(before.content))
+            await self.safe_send_message(recordChannel, "**New Message:** {}".format(after.content))
 
 #############################################
 
