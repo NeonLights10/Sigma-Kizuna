@@ -3908,7 +3908,7 @@ class MusicBot(discord.Client):
         document = await self.dbservers.find_one({"server_id": member.guild.id})
         log.info(document['autorole'])
         if document['autorole']:
-            role = discord.utils.find(lambda r: r.name == document['autorole'], member.guild.roles)
+            role = discord.utils.find(lambda r: r.name == str(document['autorole']), member.guild.roles)
             if role:
                 await member.add_roles(member, role)
                 log.info("Auto-assigned role to new member in {}".format(member.guild.name))
