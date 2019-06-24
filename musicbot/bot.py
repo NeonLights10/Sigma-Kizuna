@@ -3907,14 +3907,10 @@ class MusicBot(discord.Client):
         log.info("A new member joined in {}".format(member.guild.name))
         document = await self.dbservers.find_one({"server_id": member.guild.id})
         log.info(document['autorole'])
-        for role in member.guild.roles:
-            log.info(role.name)
         if document['autorole']:
             role = discord.utils.find(lambda r: r.name == str(document['autorole']), member.guild.roles)
-            log.info(role)
-            log.info(role.name)
             if role:
-                await member.add_roles(member, role)
+                await member.add_roles(role)
                 log.info("Auto-assigned role to new member in {}".format(member.guild.name))
             else:
                 raise ValueError("Auto-assign role does not exist!")
