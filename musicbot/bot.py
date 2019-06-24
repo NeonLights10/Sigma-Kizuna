@@ -1625,18 +1625,17 @@ class MusicBot(discord.Client):
 
         Adds selected members to a new role (name must be placed in quotes). User mentions are optional.
         """
-        if len(leftover_args) > 1:
-            try:
-                leftover_args = shlex.split(' '.join(leftover_args))
-            except ValueError:
-                raise exceptions.CommandError("Please quote the role properly", expire_in=30)
+        try:
+            leftover_args = shlex.split(' '.join(leftover_args))
+        except ValueError:
+            raise exceptions.CommandError("Please quote the role properly", expire_in=30)
+        
+        if leftover_args[0][0] in '\'"':
+            lchar = leftover_args[0][0]
+            leftover_args[0] = leftover_args[0].lstrip(lchar)
+            leftover_args[-1] = leftover_args[-1].rstrip(lchar)
         else:
-            if leftover_args[0][0] in '\'"':
-                lchar = leftover_args[0][0]
-                leftover_args[0] = leftover_args[0].lstrip(lchar)
-                leftover_args[-1] = leftover_args[-1].rstrip(lchar)
-            else:
-                raise exceptions.CommandError("Please quote the role properly", expire_in=30)
+            raise exceptions.CommandError("Please quote the role properly", expire_in=30)
 
         if user_mentions:
             pattern = re.compile('<@!?\d{17,18}>')
