@@ -3784,13 +3784,13 @@ class MusicBot(discord.Client):
         await self.safe_send_message(member.guild.get_channel(int(self.config.welcomemsg)), "Farewell {}!".format(member.name))
 
     async def on_message_delete(self, message):
-        if message.author.id not self.user.id:
+        if not message.author.id == self.user.id:
             recordChannel = message.guild.get_channel(int(self.config.recordmsg))
             await self.safe_send_message(recordChannel, "**{}#{}** (ID: {}) message has been deleted from **#{}:**".format(message.author.id, message.author.discriminator, message.author.id, message.channel.name))
             await self.safe_send_message(recordChannel, "**Message:** {}".format(message.content))
 
     async def on_message_edit(self, before, after):
-        if before.author.id not self.user.id:
+        if not before.author.id == self.user.id:
             recordChannel = before.guild.get_channel(int(self.config.recordmsg))
             await self.safe_send_message(recordChannel, "**{}#{}** (ID: {}) message has been edited in **#{}:**".format(before.author.name, before.author.discriminator, before.author.id, before.channel.name))
             await self.safe_send_message(recordChannel, "**Old Message:** {}".format(before.content))
