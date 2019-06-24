@@ -1627,6 +1627,7 @@ class MusicBot(discord.Client):
         """
         try:
             leftover_args = shlex.split(' '.join(leftover_args))
+            log.info(' '.join(leftover_args))
         except ValueError:
             raise exceptions.CommandError("Please quote the role properly", expire_in=30)
         
@@ -1634,6 +1635,7 @@ class MusicBot(discord.Client):
             lchar = leftover_args[0][0]
             leftover_args[0] = leftover_args[0].lstrip(lchar)
             leftover_args[-1] = leftover_args[-1].rstrip(lchar)
+            log.info(' '.join(leftover_args))
         else:
             raise exceptions.CommandError("Please quote the role properly", expire_in=30)
 
