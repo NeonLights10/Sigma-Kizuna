@@ -1346,14 +1346,23 @@ class MusicBot(discord.Client):
         else:
             raise exceptions.CommandError("You are not in a voice channel!")
 
-    async def cmd_aar(self, guild, role=None):
+    async def cmd_aar(self, guild, leftover_args):
         """
         Usage:
             {command_prefix}aar [role name]
         Enables auto assign role with a specific role. Server specific.
         Owner only.
         """
-        if role:   
+        if len(leftover_args) == 1:
+            if leftover_args[0][0] in '\'"':
+                    lchar = leftover_args[0][0]
+                    leftover_args[0] = leftover_args[0].lstrip(lchar)
+                    leftover_args[-1] = leftover_args[-1].rstrip(lchar)
+            else:
+                raise exceptions.CommandError("Please quote the role properly", expire_in=20)
+
+            role = leftover_args.pop()  
+            
             if role.lower() == "off":
                 await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'autorole': None}})
                 return Response("Autorole disabled", reply=False, delete_after=20)
@@ -1366,7 +1375,7 @@ class MusicBot(discord.Client):
                 #oops, can't find that role. Try again
                 raise exceptions.CommandError("Invalid role specified.", expire_in=20)
         else:
-            raise exceptions.CommandError("No argument specified.", expire_in=20)
+            raise exceptions.CommandError("Please enter an argument", expire_in=20)
 
     async def cmd_purgeid(self, channel, message, msg_id = None):
         """
@@ -1625,6 +1634,8 @@ class MusicBot(discord.Client):
                 lchar = leftover_args[0][0]
                 leftover_args[0] = leftover_args[0].lstrip(lchar)
                 leftover_args[-1] = leftover_args[-1].rstrip(lchar)
+            else:
+                raise exceptions.CommandError("Please quote the role properly", expire_in=30)
 
         if user_mentions:
             pattern = re.compile('<@!?\d{17,18}>')
