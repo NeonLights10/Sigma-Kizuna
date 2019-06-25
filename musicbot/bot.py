@@ -110,7 +110,7 @@ class MusicBot(discord.Client):
 
         log.info('Establishing connection to MongoDB database {}'.format(self.database_name))
 
-        self.mclient = motor.motor_asyncio.AsyncIOMotorClient(mongo, 27017)
+        self.mclient = motor.motor_asyncio.AsyncIOMotorClient("mongo", 27017)
         self.db = self.mclient[self.database_name]
         self.dbservers = self.db.servers
         self.dbmsgid = self.db.msgid
