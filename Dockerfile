@@ -1,4 +1,4 @@
-FROM alpine:edge
+FROM python:3.6-alpine
 
 # Add project source
 WORKDIR /usr/src/musicbot
