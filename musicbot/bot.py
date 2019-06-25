@@ -3927,7 +3927,7 @@ class MusicBot(discord.Client):
                         try:
                             msg = await channel.fetch_message(msgid['msg_id'])
                             #log.info(msg.content)
-                            if (re.match('^%|\$|!|@', msg.content) == None) and (re.match('<@!?{}>'.format(self.user.id), msg.content) == None) and (len(msg.embeds) == 0) and (msg.author.bot == False):
+                            if (re.match('^(%?)(\!?)(\@?)(\$?)', msg.content) == None) and (re.match('<@!?{}>'.format(self.user.id), msg.content) == None) and (len(msg.embeds) == 0) and (msg.author.bot == False):
                                 #log.info("Message is ok")
                                 log.info("Attempts taken:{}".format(attempts))
                                 log.info("Message ID:{}".format(msg.id))
