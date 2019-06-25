@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+  mongo:
+    image: mongo:latest
+    container_name: mongo-db
+    restart: always
+    expose:
+      - 27017
+  rune:
+    container_name: rune
+    restart: always
+    build: .
+    expose:
+      - 8080
+    depends_on:
+      - mongo
