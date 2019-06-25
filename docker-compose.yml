@@ -12,7 +12,5 @@ services:
     restart: always
     command: -update
     build: .
-    expose:
-      - 8080
     depends_on:
       - mongo
