@@ -3776,7 +3776,7 @@ class MusicBot(discord.Client):
                 log.info("Auto-assigned role to new member in {}".format(member.guild.name))
             else:
                 raise ValueError("Auto-assign role does not exist!")
-        await self.safe_send_message(member.guild.get_channel(int(self.config.welcomemsg)), "Istariana vilseriol <@{}>! Welcome to the Alice in Dissonance Discord server. Please read our <#206718758574751754>, thank you. :EmbarrassedRune:".format(member.id))
+        await self.safe_send_message(member.guild.get_channel(int(self.config.welcomemsg)), "Istariana vilseriol <@{}>! Welcome to the Alice in Dissonance Discord server. Please read our <#206718758574751754>, thank you. <:EmbarrassedRune:230670933059305473>".format(member.id))
     
     async def on_member_remove(self, member):
         await self.safe_send_message(member.guild.get_channel(int(self.config.welcomemsg)), "Farewell {}!".format(member.name))
