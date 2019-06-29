@@ -3520,7 +3520,7 @@ class MusicBot(discord.Client):
 
         for i, item in enumerate(player.playlist, 1):
             if item.meta.get('channel', False) and item.meta.get('author', False):
-                nextline = self.str.get('cmd-queue-entry-author', '{0} -- `{1}` by `{2}`').format(i, item.title, item.meta['author'].name).strip()
+                nextline = self.str.get('cmd-queue-entry-author', '{0} -- `{1}` by `{2}` `[{3}]`').format(i, item.title, item.meta['author'].name, ftimedelta(item.duration)).strip()
             else:
                 nextline = self.str.get('cmd-queue-entry-noauthor', '{0} -- `{1}`').format(i, item.title).strip()
 
@@ -3915,7 +3915,7 @@ class MusicBot(discord.Client):
             else:
                 raise ValueError("Auto-assign role does not exist!")
         else:
-            raise exceptions.CommandError("This guild's autorole has not been assigned, or it has never been activated.")
+            log.warning("This guild's autorole has not been assigned, or it has never been activated.")
 
 #############################################
 
