@@ -3520,6 +3520,7 @@ class MusicBot(discord.Client):
 
         for i, item in enumerate(player.playlist, 1):
             if item.meta.get('channel', False) and item.meta.get('author', False):
+                log.info(item.duration)
                 nextline = self.str.get('cmd-queue-entry-author', '{0} -- `{1}` by `{2}` `[{3}]`').format(i, item.title, item.meta['author'].name, item.duration).strip()
             else:
                 nextline = self.str.get('cmd-queue-entry-noauthor', '{0} -- `{1}`').format(i, item.title).strip()
