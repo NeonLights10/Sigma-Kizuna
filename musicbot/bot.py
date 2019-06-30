@@ -3835,12 +3835,14 @@ class MusicBot(discord.Client):
 
         message_content = message.content.strip()
 
+        '''
         if self.user.id in message.raw_mentions and message.author != self.user:
             log.info("Found a mention of myself")  
             msg = await self.get_msgid(message)
             log.info("Messaged retrieved: " + msg)
             parsedmessage = re.sub('<@!?\d{18}>', ' ', msg).strip()
             await self.safe_send_message(message.channel, parsedmessage)
+        '''
 
         if not message_content.startswith(self.config.command_prefix):
             return
