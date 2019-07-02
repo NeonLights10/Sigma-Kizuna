@@ -1640,7 +1640,7 @@ class MusicBot(discord.Client):
         role_permissions.change_nickname = True
 
         try:
-            role = await guild.create_role(name=rolename, permissions=role_permissions, colour=discord.Colour(int('9d0000', 16)), mentionable=True, reason="Created by {}".format(author.name))
+            role = await guild.create_role(name=rolename, permissions=role_permissions, colour=discord.Colour(int('b22222', 16)), mentionable=True, reason="Created by {}".format(author.name))
         except:
             raise exceptions.CommandError("Creating role failed!")
 
