@@ -3381,7 +3381,7 @@ class MusicBot(discord.Client):
 
         for i, item in enumerate(player.playlist, 1):
             if item.meta.get('channel', False) and item.meta.get('author', False):
-                nextline = self.str.get('cmd-queue-entry-author', '{0} -- `{1}` by `{2}`').format(i, item.title, item.meta['author'].name).strip()
+                nextline = self.str.get('cmd-queue-entry-author', '{0} -- `{1}` by `{2}` `[{3}]`').format(i, item.title, item.meta['author'].name, ftimedelta(timedelta(seconds=item.duration))).strip()
             else:
                 nextline = self.str.get('cmd-queue-entry-noauthor', '{0} -- `{1}`').format(i, item.title).strip()
 
@@ -3796,6 +3796,22 @@ class MusicBot(discord.Client):
                 await self.safe_send_message(recordChannel, "**Old Message:** {}".format(before.content))
                 await self.safe_send_message(recordChannel, "**New Message:** {}".format(after.content))
 
+    async def on_member_update(self, before, after):
+        patreon = before.guild.get_role(201966886861275137)
+        guild = after.guild
+        if patreon:
+            if not patreon in after.roles:
+                async for entry in guild.audit_logs(action=discord.AuditLogAction.member_role_update, user=guild.get_user(216303189073461248), after=(datetime.datetime.now() - datetime.timedelta(minutes=1))):
+                    if target == before:
+                        try:
+                            await after.add_roles(patreon)
+
+                        except discord.Forbidden:
+                            raise exceptions.CommandError("I don't have permission to modify a user's roles.")
+
+                        except discord.HTTPException:
+                            raise exceptions.CommandError("Something happened while attempting to add role.")
+
 #############################################
 
     async def get_msgid(self, message, attempts = 1):
@@ -4119,6 +4135,7 @@ class MusicBot(discord.Client):
                         ).strip())
 
                         self.server_specific_data[player.voice_client.guild]['auto_paused'] = True
+                        self.loop.call_later(900, checkClearQueue, player)
                         player.pause()
         else:
             if len(player.voice_client.channel.members) > 0:  # channel is not empty
@@ -4131,6 +4148,11 @@ class MusicBot(discord.Client):
  
                     self.server_specific_data[player.voice_client.guild]['auto_paused'] = False
                     player.resume()
+
+    def checkClearQueue(player):
+        if self.server_specific_data[player.voice_client.guild]['auto_paused']:
+            player.playlist.clear()
+            log.info("Clearing queue in {}".format(player.voice_client.guild.name))
 
     async def on_guild_update(self, before:discord.Guild, after:discord.Guild):
         if before.region != after.region:
