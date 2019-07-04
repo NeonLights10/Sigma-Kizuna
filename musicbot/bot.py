@@ -3801,8 +3801,8 @@ class MusicBot(discord.Client):
         guild = after.guild
         if patreon:
             if not patreon in after.roles:
-                async for entry in guild.audit_logs(action=discord.AuditLogAction.member_role_update, user=guild.get_user(216303189073461248), after=(datetime.datetime.now() - datetime.timedelta(minutes=1))):
-                    if target == before:
+                async for entry in guild.audit_logs(action=discord.AuditLogAction.member_role_update, user=self.get_user(216303189073461248), after=(datetime.datetime.now() - datetime.timedelta(minutes=1))):
+                    if entry.target == before:
                         try:
                             await after.add_roles(patreon)
 
