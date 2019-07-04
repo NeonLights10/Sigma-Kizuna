@@ -1513,7 +1513,7 @@ class MusicBot(discord.Client):
         if user_mentions:
             for user in user_mentions:
                 try:
-                    await user.add_roles(role)
+                    await user.add_roles(role, reason="Command [addrole] requested by {}".format(message.author.name))
                 except:
                     raise exceptions.CommandError("Role created, but failed to add %s to the role." % member.name);
         return Response("Created role and added %s member(s)!" % len(message.mentions), delete_after=30)
@@ -1547,7 +1547,7 @@ class MusicBot(discord.Client):
                 for role in message.role_mentions:
                     for user in user_mentions:
                         try:
-                            await user.add_roles(role)
+                            await user.add_roles(role, reason="Command [adduser] requested by {}".format(message.author.name))
                         except:
                             raise exceptions.CommandError("Failed to add %s to %s" % (user.name, role))
                 return Response("Added members to roles.", delete_after=30)
@@ -1572,7 +1572,7 @@ class MusicBot(discord.Client):
                 if role:
                     for user in user_mentions:
                         try:
-                            await user.add_roles(role)
+                            await user.add_roles(role, reason="Command [adduser] requested by {}".format(message.author.name))
                         except:
                             raise exceptions.CommandError("Failed to add %s to %s" % (user.name, role))
                 else:
@@ -1593,7 +1593,7 @@ class MusicBot(discord.Client):
                 for role in message.role_mentions:
                     for user in user_mentions:
                         try:
-                            await user.remove_roles(role)
+                            await user.remove_roles(role, reason="Command [removeuser] requested by {}".format(message.author.name))
                         except:
                             raise exceptions.CommandError("Failed to remove %s from %s" % (user.name, role))
                 return Response("Removed members from roles.", delete_after=30)
@@ -1618,7 +1618,7 @@ class MusicBot(discord.Client):
                 if role:
                     for user in user_mentions:
                         try:
-                            await user.remove_roles(role)
+                            await user.remove_roles(role, reason="Command [removeuser] requested by {}".format(message.author.name))
                         except:
                             raise exceptions.CommandError("Failed to remove %s from %s" % (user.name, role))
                 else:
@@ -3804,7 +3804,7 @@ class MusicBot(discord.Client):
                 async for entry in guild.audit_logs(action=discord.AuditLogAction.member_role_update, user=self.get_user(216303189073461248), after=(datetime.datetime.now() - datetime.timedelta(minutes=1))):
                     if entry.target == before:
                         try:
-                            await after.add_roles(patreon)
+                            await after.add_roles(patreon, reason="Auto-reassignment of patron role")
 
                         except discord.Forbidden:
                             raise exceptions.CommandError("I don't have permission to modify a user's roles.")
