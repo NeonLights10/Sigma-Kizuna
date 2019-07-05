@@ -1985,7 +1985,7 @@ class MusicBot(discord.Client):
             traceback.print_exc()
             time_until = ''
 
-        reply_text.format(btext, time_until)
+        reply_text = reply_text.format(btext, time_until)
 
         return Response(reply_text, delete_after=30)
 
