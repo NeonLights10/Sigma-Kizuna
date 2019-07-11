@@ -4135,7 +4135,7 @@ class MusicBot(discord.Client):
                         ).strip())
 
                         self.server_specific_data[player.voice_client.guild]['auto_paused'] = True
-                        self.loop.call_later(900, checkClearQueue, player)
+                        #self.loop.call_later(900, checkClearQueue, player)
                         player.pause()
         else:
             if len(player.voice_client.channel.members) > 0:  # channel is not empty
