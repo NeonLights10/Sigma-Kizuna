@@ -3787,14 +3787,19 @@ class MusicBot(discord.Client):
                 recordChannel = message.guild.get_channel(int(self.config.recordmsg))
                 await self.safe_send_message(recordChannel, "**{}#{}** (ID: {}) message has been deleted from **#{}:**".format(message.author.name, message.author.discriminator, message.author.id, message.channel.name))
                 await self.safe_send_message(recordChannel, "**Message:** {}".format(message.content))
+                if len(message.attachments) > 0:
+                    for entry in message.attachments:
+                        await self.safe_send_message(recordChannel, "**Attachment:** {}".format(entry.proxy_url))
+
 
     async def on_message_edit(self, before, after):
         if not before.author.id == self.user.id:
             if not before.content == after.content:
                 recordChannel = before.guild.get_channel(int(self.config.recordmsg))
-                await self.safe_send_message(recordChannel, "**{}#{}** (ID: {}) message has been edited in **#{}:**".format(before.author.name, before.author.discriminator, before.author.id, before.channel.name))
-                await self.safe_send_message(recordChannel, "**Old Message:** {}".format(before.content))
-                await self.safe_send_message(recordChannel, "**New Message:** {}".format(after.content))
+                if recordChannel:
+                    await self.safe_send_message(recordChannel, "**{}#{}** (ID: {}) message has been edited in **#{}:**".format(before.author.name, before.author.discriminator, before.author.id, before.channel.name))
+                    await self.safe_send_message(recordChannel, "**Old Message:** {}".format(before.content))
+                    await self.safe_send_message(recordChannel, "**New Message:** {}".format(after.content))
 
     async def on_member_update(self, before, after):
         patreon = before.guild.get_role(201966886861275137)
