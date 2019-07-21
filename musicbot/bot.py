@@ -3779,7 +3779,7 @@ class MusicBot(discord.Client):
         await self.safe_send_message(member.guild.get_channel(int(self.config.welcomemsg)), "Istariana vilseriol <@{}>! Welcome to the Alice in Dissonance Discord server. Please read our <#206718758574751754>, thank you. <:EmbarrassedRune:230670933059305473>".format(member.id))
     
     async def on_member_remove(self, member):
-        await self.safe_send_message(member.guild.get_channel(int(self.config.welcomemsg)), "Farewell {}!".format(member.name))
+        await self.safe_send_message(member.guild.get_channel(int(self.config.welcomemsg)), "Farewell {}! (ID: {})".format(member.name, member.id))
 
     async def on_message_delete(self, message):
         if not message.author.id == self.user.id:
@@ -3791,7 +3791,9 @@ class MusicBot(discord.Client):
                     for entry in message.attachments:
                         await self.safe_send_message(recordChannel, "**Attachment:** {}".format(entry.proxy_url))
 
-
+    #TODO: store recordmsg config in mongoDB document and retrieve from there instead of having the option in config
+    #The way it works right now limits this feature to one server only. 
+    #Fix for welcomemsg as well for on_member_join and on_member_remove.
     async def on_message_edit(self, before, after):
         if not before.author.id == self.user.id:
             if not before.content == after.content:
