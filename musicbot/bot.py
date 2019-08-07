@@ -1670,7 +1670,7 @@ class MusicBot(discord.Client):
                     await role.delete(reason="Deleted by {}".format(author.name))
                 except:
                     raise exceptions.CommandError("Could not delete %s!" % role.name)
-                return Response("Deleted %s role(s)" % len(message.role_mentions), delete_after=30)
+        return Response("Deleted %s role(s)" % len(message.role_mentions), delete_after=30)
         else:
             raise exceptions.CommandError("No role specified!")
 
