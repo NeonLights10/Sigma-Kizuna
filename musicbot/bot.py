@@ -272,6 +272,9 @@ class MusicBot(discord.Client):
                     users.append(member.id)
         post = {'server_id': id,
                 'autorole': None,
+                'ruleschannel': None,
+                'welcomechannel': None,
+                'msglog': None,
                 'admins': users,
                 'muted': []
                 }
@@ -1205,6 +1208,46 @@ class MusicBot(discord.Client):
             return Response("Screenshare link (desktop only!): <https://discordapp.com/channels/{}/{}>".format(guild.id, author.voice.channel.id), reply=True, delete_after=60)
         else:
             raise exceptions.CommandError("You are not in a voice channel!")
+
+    async def cmd_purgedb(self):
+        """
+        Usage:
+            {command_prefix}purgedb
+        Resets DB to default. Useful when document fields are added/removed.
+        """
+        result = await self.dbservers.delete_many()
+        for guild in self.guilds:
+            #log.info(server.id)
+            await self._check_document(guild, guild.id)
+
+    async def cmd_dbconfig(self, guild, message, channel_mentions, leftover_args, config = None, channelmention = None):
+        """
+        Usage:
+            {command_prefix}dbconfig [welcomechannel/ruleschannel/msglog] [channel_mention]
+        Changes the value in the database config document to the specified channel.
+        You can currently set the channel for the welcome message, the rules channel, and the channel for outputting logs.
+        """
+        if config:
+            if channel_mentions:
+                if config.lower() == "welcomechannel":
+                    await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'welcomechannel': channel_mentions[0].id}})
+                    return Response("Set channel <#{}> as Welcome Message Channel".format(channel_mentions[0].id))
+
+                elif config.lower() == "ruleschannel":
+                    await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'ruleschannel': channel_mentions[0].id}})
+                    return Response("Set channel <#{}> as Rules Channel".format(channel_mentions[0].id))
+
+                elif config.lower() == "msglog":
+                    for channel in channel_mentions:
+                    await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'msglog': channel_mentions[0].id}})
+                    return Response("Set channel <#{}> as Log Channel".format(channel_mentions[0].id))
+
+                else:
+                    raise exceptions.CommandError("Invalid database config value.")
+            else:
+                raise exceptions.CommandError("Specify a channel!")
+        else:
+            raise exceptions.CommandError("Specify a database config value!")
 
     async def cmd_aar(self, guild, leftover_args):
         """
@@ -3776,32 +3819,44 @@ class MusicBot(discord.Client):
                 log.info("Auto-assigned role to new member in {}".format(member.guild.name))
             else:
                 raise ValueError("Auto-assign role does not exist!")
-        await self.safe_send_message(member.guild.get_channel(int(self.config.welcomemsg)), "Istariana vilseriol <@{}>! Welcome to the Alice in Dissonance Discord server. Please read our <#206718758574751754>, thank you. <:EmbarrassedRune:230670933059305473>".format(member.id))
-    
+        if document['welcomechannel']:
+            welcomechannel = int(document['welcomechannel'])
+            if document['ruleschannel']:
+                ruleschannel = int(document['ruleschannel'])
+                await self.safe_send_message(member.guild.get_channel(welcomechannel), "Istariana vilseriol <@{}>! Welcome to the {} Discord server. Please read our <#{}>, thank you.".format(member.id, member.guild.name, ruleschannel))
+            else:
+                await self.safe_send_message(member.guild.get_channel(welcomechannel), "Istariana vilseriol <@{}>! Welcome to the {} Discord server.".format(member.id, member.guild.name))
+        
     async def on_member_remove(self, member):
-        await self.safe_send_message(member.guild.get_channel(int(self.config.welcomemsg)), "Farewell {}! (ID: {})".format(member.name, member.id))
+        document = await self.dbservers.find_one({"server_id": member.guild.id})
+        if document['welcomechannel']:
+            welcomechannel = int(document['welcomechannel'])
+            await self.safe_send_message(member.guild.get_channel(welcomechannel), "Farewell {}! (ID: {})".format(member.name, member.id))
 
     async def on_message_delete(self, message):
-        if not message.author.id == self.user.id:
-            if re.match('^{}'.format(self.config.command_prefix), message.content) == None:
-                recordChannel = message.guild.get_channel(int(self.config.recordmsg))
-                await self.safe_send_message(recordChannel, "**{}#{}** (ID: {}) message has been deleted from **#{}:**".format(message.author.name, message.author.discriminator, message.author.id, message.channel.name))
-                await self.safe_send_message(recordChannel, "**Message:** {}".format(message.content))
-                if len(message.attachments) > 0:
-                    for entry in message.attachments:
-                        await self.safe_send_message(recordChannel, "**Attachment:** {}".format(entry.proxy_url))
+        document = await self.dbservers.find_one({"server_id": member.guild.id})
+        if document['msglog']:
+            msglog = int(document['msglog'])
+            if not message.author.id == self.user.id:
+                if re.match('^{}'.format(self.config.command_prefix), message.content) == None:
+                    recordChannel = message.guild.get_channel(msglog)
+                    await self.safe_send_message(recordChannel, "**{}#{}** (ID: {}) message has been deleted from **#{}:**".format(message.author.name, message.author.discriminator, message.author.id, message.channel.name))
+                    await self.safe_send_message(recordChannel, "**Message:** {}".format(message.content))
+                    if len(message.attachments) > 0:
+                        for entry in message.attachments:
+                            await self.safe_send_message(recordChannel, "**Attachment:** {}".format(entry.proxy_url))
 
-    #TODO: store recordmsg config in mongoDB document and retrieve from there instead of having the option in config
-    #The way it works right now limits this feature to one server only. 
-    #Fix for welcomemsg as well for on_member_join and on_member_remove.
     async def on_message_edit(self, before, after):
-        if not before.author.id == self.user.id:
-            if not before.content == after.content:
-                recordChannel = before.guild.get_channel(int(self.config.recordmsg))
-                if recordChannel:
-                    await self.safe_send_message(recordChannel, "**{}#{}** (ID: {}) message has been edited in **#{}:**".format(before.author.name, before.author.discriminator, before.author.id, before.channel.name))
-                    await self.safe_send_message(recordChannel, "**Old Message:** {}".format(before.content))
-                    await self.safe_send_message(recordChannel, "**New Message:** {}".format(after.content))
+        document = await self.dbservers.find_one({"server_id": member.guild.id})
+        if document['msglog']:
+            msglog = int(document['msglog'])
+            if not before.author.id == self.user.id:
+                if not before.content == after.content:
+                    recordChannel = before.guild.get_channel(msglog)
+                    if recordChannel:
+                        await self.safe_send_message(recordChannel, "**{}#{}** (ID: {}) message has been edited in **#{}:**".format(before.author.name, before.author.discriminator, before.author.id, before.channel.name))
+                        await self.safe_send_message(recordChannel, "**Old Message:** {}".format(before.content))
+                        await self.safe_send_message(recordChannel, "**New Message:** {}".format(after.content))
 
     async def on_member_update(self, before, after):
         patreon = before.guild.get_role(201966886861275137)

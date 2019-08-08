@@ -87,8 +87,6 @@ class Config:
 
         self.bound_commands = config.get('Other', 'BoundCommands', fallback=None)
         self.retain_commands = config.get('Other', 'RetainCommands', fallback=None)
-        self.recordmsg = config.get('Other', 'RecordMsg', fallback=None)
-        self.welcomemsg = config.get('Other', 'WelcomeMsg', fallback=None)
 
         self.run_checks()
 
