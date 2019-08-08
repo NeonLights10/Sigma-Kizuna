@@ -1238,7 +1238,6 @@ class MusicBot(discord.Client):
                     return Response("Set channel <#{}> as Rules Channel".format(channel_mentions[0].id))
 
                 elif config.lower() == "msglog":
-                    for channel in channel_mentions:
                     await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'msglog': channel_mentions[0].id}})
                     return Response("Set channel <#{}> as Log Channel".format(channel_mentions[0].id))
 
