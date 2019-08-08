@@ -7,6 +7,8 @@ services:
     restart: always
     expose:
       - 27017
+    volumes:
+      - ./data:/data/db
   rune:
     container_name: rune
     restart: always
@@ -14,5 +16,3 @@ services:
     build: .
     depends_on:
       - mongo
-    volumes:
-      - ./data:/data/db
