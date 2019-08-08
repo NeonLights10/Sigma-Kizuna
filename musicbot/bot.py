@@ -3827,7 +3827,7 @@ class MusicBot(discord.Client):
                 await self.safe_send_message(member.guild.get_channel(welcomechannel), "Istariana vilseriol <@{}>! Welcome to the {} Discord server.".format(member.id, member.guild.name))
         
     async def on_member_remove(self, member):
-        document = await self.dbservers.find_one({"server_id": message.guild.id})
+        document = await self.dbservers.find_one({"server_id": member.guild.id})
         if document['welcomechannel']:
             welcomechannel = int(document['welcomechannel'])
             await self.safe_send_message(member.guild.get_channel(welcomechannel), "Farewell {}! (ID: {})".format(member.name, member.id))
@@ -3846,7 +3846,7 @@ class MusicBot(discord.Client):
                             await self.safe_send_message(recordChannel, "**Attachment:** {}".format(entry.proxy_url))
 
     async def on_message_edit(self, before, after):
-        document = await self.dbservers.find_one({"server_id": message.guild.id})
+        document = await self.dbservers.find_one({"server_id": before.guild.id})
         if document['msglog']:
             msglog = int(document['msglog'])
             if not before.author.id == self.user.id:
