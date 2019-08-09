@@ -1317,6 +1317,18 @@ class MusicBot(discord.Client):
                         raise exceptions.CommandError("Invalid number specified.", expire_in=20)
                     try:
                         deleted = await channel.purge(limit=num+1, check=user_check)
+
+                        document = await self.dbservers.find_one({"server_id": message.guild.id})
+                        if document['msglog']:
+                            recordChannel = message.guild.get_channel(int(document['msglog']))
+                            await self.safe_send_message(recordChannel, "The following {} messages were purged by {}".format(len(deleted), message.author.name))
+                            for dmessage in deleted:
+                                await self.safe_send_message(recordChannel, "**{}#{}** (ID: {}) message has been deleted from **#{}:**".format(dmessage.author.name, dmessage.author.discriminator, dmessage.author.id, dmessage.channel.name))
+                                await self.safe_send_message(recordChannel, "**Message:** {}".format(dmessage.content))
+                                if len(dmessage.attachments) > 0:
+                                    for entry in dmessage.attachments:
+                                        await self.safe_send_message(recordChannel, "**Attachment:** {}".format(entry.proxy_url))
+
                         msg = "The last {} messages by {} were purged".format(len(deleted), user.name)
                         return Response(msg, reply=False, delete_after=20)
                     except discord.Forbidden:
@@ -1328,8 +1340,20 @@ class MusicBot(discord.Client):
                 raise exceptions.CommandError("Invalid number specified.", expire_in=20)
 
             try:
-                await channel.purge(limit=num, before=message)
-                msg = str(num) + " message(s) purged."
+                deleted = await channel.purge(limit=num, before=message)
+
+                document = await self.dbservers.find_one({"server_id": message.guild.id})
+                if document['msglog']:
+                    recordChannel = message.guild.get_channel(int(document['msglog']))
+                    await self.safe_send_message(recordChannel, "The following {} messages were purged by {}".format(len(deleted), message.author.name))
+                    for dmessage in deleted:
+                        await self.safe_send_message(recordChannel, "**{}#{}** (ID: {}) message has been deleted from **#{}:**".format(dmessage.author.name, dmessage.author.discriminator, dmessage.author.id, dmessage.channel.name))
+                        await self.safe_send_message(recordChannel, "**Message:** {}".format(dmessage.content))
+                        if len(dmessage.attachments) > 0:
+                            for entry in dmessage.attachments:
+                                await self.safe_send_message(recordChannel, "**Attachment:** {}".format(entry.proxy_url))
+
+                msg = str(len(deleted)) + " message(s) purged."
                 return Response(msg, reply=False, delete_after=20)
             except discord.Forbidden:
                 raise exceptions.CommandError("It seems like I don't have the permissions to do that. Check your server settings?", expire_in=20)
