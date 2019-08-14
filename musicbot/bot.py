@@ -3855,6 +3855,20 @@ class MusicBot(discord.Client):
                         for entry in message.attachments:
                             await self.safe_send_message(recordChannel, "**Attachment:** {}".format(entry.proxy_url))
 
+    async def on_bulk_message_delete(self, messages):
+        document = await self.dbservers.find_one({"server_id": message.guild.id})
+        if document['msglog']:
+            msglog = int(document['msglog'])
+            for message in messages:
+                if not message.author.id == self.user.id:
+                if re.match('^{}'.format(self.config.command_prefix), message.content) == None:
+                    recordChannel = message.guild.get_channel(msglog)
+                    await self.safe_send_message(recordChannel, "**{}#{}** (ID: {}) message has been deleted from **#{}:**".format(message.author.name, message.author.discriminator, message.author.id, message.channel.name))
+                    await self.safe_send_message(recordChannel, "**Message:** {}".format(message.content))
+                    if len(message.attachments) > 0:
+                        for entry in message.attachments:
+                            await self.safe_send_message(recordChannel, "**Attachment:** {}".format(entry.proxy_url))
+
     async def on_message_edit(self, before, after):
         document = await self.dbservers.find_one({"server_id": before.guild.id})
         if document['msglog']:
