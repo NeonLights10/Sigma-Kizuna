@@ -3856,7 +3856,7 @@ class MusicBot(discord.Client):
                             await self.safe_send_message(recordChannel, "**Attachment:** {}".format(entry.proxy_url))
 
     async def on_bulk_message_delete(self, messages):
-        document = await self.dbservers.find_one({"server_id": message.guild.id})
+        document = await self.dbservers.find_one({"server_id": messages[0].guild.id})
         if document['msglog']:
             msglog = int(document['msglog'])
             for message in messages:
