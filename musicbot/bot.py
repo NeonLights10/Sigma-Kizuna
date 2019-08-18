@@ -275,6 +275,7 @@ class MusicBot(discord.Client):
                 'ruleschannel': None,
                 'welcomechannel': None,
                 'msglog': None,
+                'invitelog': False,
                 'admins': users,
                 'muted': []
                 }
@@ -1246,10 +1247,14 @@ class MusicBot(discord.Client):
             else:
                 if config.lower() == "invitelog":
                     document = await self.dbservers.find_one({"server_id": guild.id})
-                    if document['invitelog']:
-                        await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'invitelog': False}})
-                        return Response("Enabled invite logging")
-                    else:
+                    try:
+                        if document['invitelog']:
+                            await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'invitelog': False}})
+                            return Response("Enabled invite logging")
+                        else:
+                            await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'invitelog': True}})
+                            return Response("Enabled invite logging")
+                    except KeyError:
                         await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'invitelog': True}})
                         return Response("Enabled invite logging")
                 else:
