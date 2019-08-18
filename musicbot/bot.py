@@ -3862,19 +3862,23 @@ class MusicBot(discord.Client):
             else:
                 await self.safe_send_message(member.guild.get_channel(welcomechannel), "Istariana vilseriol <@{}>! Welcome to the {} Discord server.".format(member.id, member.guild.name))
         if (document['invitelog'] == "y") and document['msglog']:
+            log.info("Invite logging is enabled.")
             msglog = int(document['msglog'])
             invites = await member.guild.invites()
             for invite in invites:
-                if document[invite.code]:
-                    if invite.uses > document[invite.code]:
-                        recordChannel = member.guild.get_channel(msglog)
-                        numDiff = invite.uses - int(document[invite.code])
-                        #Allow for variable index in the mongo syntax
-                        update = { "$set": {} }
-                        update['$set'][invite.code] = invite.uses
-                        await self.dbservers.update_one({"server_id": guild.id}, update)
-                        await self.safe_send_message(recordChannel, "**{}** have joined using the invite code **{}**. The last person to join was **{}**".format(numDiff, invite.code, member.name))
-                else:
+                try:
+                    if document[invite.code]:
+                        log.info("Invite code in database")
+                        if invite.uses > document[invite.code]:
+                            recordChannel = member.guild.get_channel(msglog)
+                            numDiff = invite.uses - int(document[invite.code])
+                            #Allow for variable index in the mongo syntax
+                            update = { "$set": {} }
+                            update['$set'][invite.code] = invite.uses
+                            await self.dbservers.update_one({"server_id": guild.id}, update)
+                            await self.safe_send_message(recordChannel, "**{}** have joined using the invite code **{}**. The last person to join was **{}**".format(numDiff, invite.code, member.name))
+                except KeyError:
+                    log.info("Invite code not in database")
                     recordChannel = member.guild.get_channel(msglog)
                     update = { "$set": {} }
                     update['$set'][invite.code] = invite.uses
