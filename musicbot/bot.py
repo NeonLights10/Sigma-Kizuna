@@ -1249,20 +1249,20 @@ class MusicBot(discord.Client):
             else:
                 if config.lower() == "invitelog":
                     document = await self.dbservers.find_one({"server_id": guild.id})
-                    try:
-                        if document['invitelog'] == "y":
-                            await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'invitelog': "n"}})
-                            return Response("Enabled invite logging")
-                        else:
-                            await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'invitelog': "y"}})
-                            return Response("Enabled invite logging")
-                    except KeyError:
-                        await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'invitelog': True}})
+                    if document['invitelog'] == "y":
+                        await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'invitelog': "n"}})
+                        return Response("Enabled invite logging")
+                    else:
+                        await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'invitelog': "y"}})
                         return Response("Enabled invite logging")
                 else:
                     raise exceptions.CommandError("Specify a channel!")
         else:
             raise exceptions.CommandError("Specify a database config value!")
+
+    async def cmd_resetdbvalue(self, guild):
+        await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'invitelog': "y"}})
+        return Response("Enabled invite logging with new value")
 
     async def cmd_aar(self, guild, leftover_args):
         """
