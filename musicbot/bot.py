@@ -275,7 +275,7 @@ class MusicBot(discord.Client):
                 'ruleschannel': None,
                 'welcomechannel': None,
                 'msglog': None,
-                'invitelog': False,
+                'invitelog': "n",
                 'admins': users,
                 'muted': []
                 }
@@ -1259,10 +1259,6 @@ class MusicBot(discord.Client):
                     raise exceptions.CommandError("Specify a channel!")
         else:
             raise exceptions.CommandError("Specify a database config value!")
-
-    async def cmd_resetdbvalue(self, guild):
-        await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'invitelog': "y"}})
-        return Response("Enabled invite logging with new value")
 
     async def cmd_aar(self, guild, leftover_args):
         """
