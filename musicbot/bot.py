@@ -3829,7 +3829,13 @@ class MusicBot(discord.Client):
         return Response(codeblock.format(result))
 
 #############################################
-
+    
+    # When a member joins, log in console, then check if autorole setting is enabled.
+        # If autorole is enabled, assign the role to the new member.
+    # Check for a welcome channel
+        # If welcomechannel config is enabled, check for ruleschannel to determine which welcome message to send.
+    # Check for invite logging and if a logging channel is specified.
+        # If invite logging is enabled, pull the current list of invites and cross-reference use statistics to see which invite link was used, then record in the logging channel. 
     async def on_member_join(self, member):
         log.info("A new member joined in {}".format(member.guild.name))
 
@@ -3857,19 +3863,26 @@ class MusicBot(discord.Client):
                     if invite.uses > document[invite.code]:
                         recordChannel = member.guild.get_channel(msglog)
                         numDiff = invite.uses - int(document[invite.code])
-                        await self.dbservers.update_one({"server_id": guild.id}, {"$set": {str(invite.code): invite.uses}})
+                        #Allow for variable index in the mongo syntax
+                        update = { "$set": {} }
+                        update['$set'][invite.code] = invite.uses
+                        await self.dbservers.update_one({"server_id": guild.id}, update)
                         await self.safe_send_message(recordChannel, "**{}** have joined using the invite code **{}**. The last person to join was **{}**".format(numDiff, invite.code, member.name))
                 else:
                     recordChannel = member.guild.get_channel(msglog)
-                    await self.dbservers.update_one({"server_id": guild.id}, {"$set": {str(invite.code): invite.uses}})
+                    update = { "$set": {} }
+                    update['$set'][invite.code] = invite.uses
+                    await self.dbservers.update_one({"server_id": guild.id}, update)
                     await self.safe_send_message(recordChannel, "**New invite code detected!** **{}** have joined using the invite code **{}**. The last person to join was **{}**".format(numDiff, invite.code, member.name))
-        
+    
+    # Send farewell message whenever a member leaves the server
     async def on_member_remove(self, member):
         document = await self.dbservers.find_one({"server_id": member.guild.id})
         if document['welcomechannel']:
             welcomechannel = int(document['welcomechannel'])
             await self.safe_send_message(member.guild.get_channel(welcomechannel), "Farewell {}! (ID: {})".format(member.name, member.id))
 
+    # Logs a deleted message, which includes User + Discriminator, User ID, channel, message contents, and attachments (if any)
     async def on_message_delete(self, message):
         document = await self.dbservers.find_one({"server_id": message.guild.id})
         if document['msglog']:
@@ -3883,6 +3896,7 @@ class MusicBot(discord.Client):
                         for entry in message.attachments:
                             await self.safe_send_message(recordChannel, "**Attachment:** {}".format(entry.proxy_url))
 
+    # Logs bulk deleted messages (for purges)
     async def on_bulk_message_delete(self, messages):
         document = await self.dbservers.find_one({"server_id": messages[0].guild.id})
         if document['msglog']:
@@ -3897,6 +3911,7 @@ class MusicBot(discord.Client):
                             for entry in message.attachments:
                                 await self.safe_send_message(recordChannel, "**Attachment:** {}".format(entry.proxy_url))
 
+    # Logs an edited message, which includes User + Discriminator, User ID, channel, message contents
     async def on_message_edit(self, before, after):
         document = await self.dbservers.find_one({"server_id": before.guild.id})
         if document['msglog']:
@@ -3909,11 +3924,13 @@ class MusicBot(discord.Client):
                         await self.safe_send_message(recordChannel, "**Old Message:** {}".format(before.content))
                         await self.safe_send_message(recordChannel, "**New Message:** {}".format(after.content))
 
+    # Patreon auto-reassign co-routine whenever patreonBot removes a role from a patron due to status change. All patrons maintain the role for life, which makes this necessary
     async def on_member_update(self, before, after):
         patreon = before.guild.get_role(201966886861275137)
         guild = after.guild
         if patreon:
             if not patreon in after.roles:
+                #To prevent search through the entire audit log, limit to 1 minute in the past
                 async for entry in guild.audit_logs(action=discord.AuditLogAction.member_role_update, user=self.get_user(216303189073461248), after=(datetime.datetime.now() - datetime.timedelta(minutes=1))):
                     if entry.target == before:
                         try:
@@ -3926,7 +3943,7 @@ class MusicBot(discord.Client):
                             raise exceptions.CommandError("Something happened while attempting to add role.")
 
 #############################################
-
+    
     async def get_msgid(self, message, attempts = 1):
         pipeline = [{'$match': {'$and': [{'server_id': message.guild.id}, {'author_id': {'$not': {'$regex': str(self.user.id)}}}] }}, {'$sample': {'size': 1}}]
         async for msgid in self.dbmsgid.aggregate(pipeline):
