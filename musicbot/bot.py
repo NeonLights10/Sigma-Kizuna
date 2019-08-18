@@ -1224,9 +1224,11 @@ class MusicBot(discord.Client):
     async def cmd_dbconfig(self, guild, message, channel_mentions, leftover_args, config = None, channelmention = None):
         """
         Usage:
-            {command_prefix}dbconfig [welcomechannel/ruleschannel/msglog] [channel_mention]
-        Changes the value in the database config document to the specified channel.
+            {command_prefix}dbconfig [welcomechannel/ruleschannel/msglog/invitelog] [channel_mention]
+        Changes the value in the database config document.
+        For welcomechannel, ruleschannel, and msglog, please specify a specific channel.
         You can currently set the channel for the welcome message, the rules channel, and the channel for outputting logs.
+        For invitelog, do not put anything besides the keyword. It will either enable/disable it.
         """
         if config:
             if channel_mentions:
@@ -1248,11 +1250,11 @@ class MusicBot(discord.Client):
                 if config.lower() == "invitelog":
                     document = await self.dbservers.find_one({"server_id": guild.id})
                     try:
-                        if document['invitelog']:
-                            await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'invitelog': False}})
+                        if document['invitelog'] == "y":
+                            await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'invitelog': "n"}})
                             return Response("Enabled invite logging")
                         else:
-                            await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'invitelog': True}})
+                            await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'invitelog': "y"}})
                             return Response("Enabled invite logging")
                     except KeyError:
                         await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'invitelog': True}})
@@ -1550,16 +1552,20 @@ class MusicBot(discord.Client):
         except ValueError:
             raise exceptions.CommandError("Please quote the role properly", expire_in=30)
 
+        #Latest variable parameter parse system. Dumps user mentions from the leftover_args list
         if user_mentions:
             pattern = re.compile('<@!?\d{17,18}>')
+            #Ensures that only one parameter is not a user mention. Otherwise it means the parameter order is wrong or there are too many.
             for x in range(len(leftover_args) - 1):
                 if not pattern.match(leftover_args[x]):
                     raise exceptions.CommandError("Incorrect argument order or too many arguments!", expire_in=30)
             lcopy = leftover_args[:]
+            #Dump all user mentions
             for arg in lcopy:
                 if pattern.match(arg):
                     leftover_args.remove(arg)
 
+        #Only thing left should be the role name now
         rolename = leftover_args.pop()
         
         role_permissions = guild.default_role
@@ -3855,7 +3861,7 @@ class MusicBot(discord.Client):
                 await self.safe_send_message(member.guild.get_channel(welcomechannel), "Istariana vilseriol <@{}>! Welcome to the {} Discord server. Please read our <#{}>, thank you.".format(member.id, member.guild.name, ruleschannel))
             else:
                 await self.safe_send_message(member.guild.get_channel(welcomechannel), "Istariana vilseriol <@{}>! Welcome to the {} Discord server.".format(member.id, member.guild.name))
-        if document['invitelog'] and document['msglog']:
+        if (document['invitelog'] == "y") and document['msglog']:
             msglog = int(document['msglog'])
             invites = await member.guild.invites()
             for invite in invites:
