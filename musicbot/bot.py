@@ -1240,20 +1240,20 @@ class MusicBot(discord.Client):
                 elif config.lower() == "msglog":
                     await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'msglog': channel_mentions[0].id}})
                     return Response("Set channel <#{}> as Log Channel".format(channel_mentions[0].id))
-
-                elif config.lower() == "invitelog":
-                    document = await self.dbservers.find_one({"server_id": member.guild.id})
+                    
+                else:
+                    raise exceptions.CommandError("Invalid database config value.")
+            else:
+                if config.lower() == "invitelog":
+                    document = await self.dbservers.find_one({"server_id": guild.id})
                     if document['invitelog']:
                         await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'invitelog': False}})
                         return Response("Enabled invite logging")
                     else:
                         await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'invitelog': True}})
                         return Response("Enabled invite logging")
-                    
                 else:
-                    raise exceptions.CommandError("Invalid database config value.")
-            else:
-                raise exceptions.CommandError("Specify a channel!")
+                    raise exceptions.CommandError("Specify a channel!")
         else:
             raise exceptions.CommandError("Specify a database config value!")
 
