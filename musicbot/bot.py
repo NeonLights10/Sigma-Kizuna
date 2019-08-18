@@ -1241,6 +1241,15 @@ class MusicBot(discord.Client):
                     await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'msglog': channel_mentions[0].id}})
                     return Response("Set channel <#{}> as Log Channel".format(channel_mentions[0].id))
 
+                elif config.lower() == "invitelog":
+                    document = await self.dbservers.find_one({"server_id": member.guild.id})
+                    if document['invitelog']:
+                        await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'invitelog': False}})
+                        return Response("Enabled invite logging")
+                    else:
+                        await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'invitelog': True}})
+                        return Response("Enabled invite logging")
+                    
                 else:
                     raise exceptions.CommandError("Invalid database config value.")
             else:
@@ -3835,6 +3844,20 @@ class MusicBot(discord.Client):
                 await self.safe_send_message(member.guild.get_channel(welcomechannel), "Istariana vilseriol <@{}>! Welcome to the {} Discord server. Please read our <#{}>, thank you.".format(member.id, member.guild.name, ruleschannel))
             else:
                 await self.safe_send_message(member.guild.get_channel(welcomechannel), "Istariana vilseriol <@{}>! Welcome to the {} Discord server.".format(member.id, member.guild.name))
+        if document['invitelog'] and document['msglog']:
+            msglog = int(document['msglog'])
+            invites = await member.guild.invites()
+            for invite in invites:
+                if document[invite.code]:
+                    if invite.uses > document[invite.code]:
+                        recordChannel = member.guild.get_channel(msglog)
+                        numDiff = invite.uses - int(document[invite.code])
+                        await self.dbservers.update_one({"server_id": guild.id}, {"$set": {str(invite.code): invite.uses}})
+                        await self.safe_send_message(recordChannel, "**{}** have joined using the invite code **{}**. The last person to join was **{}**".format(numDiff, invite.code, member.name))
+                else:
+                    recordChannel = member.guild.get_channel(msglog)
+                    await self.dbservers.update_one({"server_id": guild.id}, {"$set": {str(invite.code): invite.uses}})
+                    await self.safe_send_message(recordChannel, "**New invite code detected!** **{}** have joined using the invite code **{}**. The last person to join was **{}**".format(numDiff, invite.code, member.name))
         
     async def on_member_remove(self, member):
         document = await self.dbservers.find_one({"server_id": member.guild.id})
