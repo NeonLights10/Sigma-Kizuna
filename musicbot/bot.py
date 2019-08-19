@@ -3860,12 +3860,17 @@ class MusicBot(discord.Client):
         if (document['invitelog'] == "y") and document['msglog']:
             log.info("Invite logging is enabled.")
             msglog = int(document['msglog'])
+
+            #Grab list of invites and vanity URL, then append vanity URL to list
             invites = await member.guild.invites()
+            vanity = await member.guild.vanity_invite()
+            invites.append(vanity)
+
             for invite in invites:
                 try:
                     if document[invite.code]:
                         log.info("Invite code in database")
-                        if invite.uses > document[invite.code]:
+                        if invite.uses > int(document[invite.code]):
                             recordChannel = member.guild.get_channel(msglog)
                             numDiff = invite.uses - int(document[invite.code])
                             #Allow for variable index in the mongo syntax
