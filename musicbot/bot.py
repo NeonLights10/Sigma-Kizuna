@@ -3871,14 +3871,14 @@ class MusicBot(discord.Client):
                             #Allow for variable index in the mongo syntax
                             update = { "$set": {} }
                             update['$set'][invite.code] = invite.uses
-                            await self.dbservers.update_one({"server_id": guild.id}, update)
+                            await self.dbservers.update_one({"server_id": member.guild.id}, update)
                             await self.safe_send_message(recordChannel, "**{}** have joined using the invite code **{}**. The last person to join was **{}**".format(numDiff, invite.code, member.name))
                 except KeyError:
                     log.info("Invite code not in database")
                     recordChannel = member.guild.get_channel(msglog)
                     update = { "$set": {} }
                     update['$set'][invite.code] = invite.uses
-                    await self.dbservers.update_one({"server_id": guild.id}, update)
+                    await self.dbservers.update_one({"server_id": member.guild.id}, update)
                     await self.safe_send_message(recordChannel, "**New invite code detected!** **{}** have joined using the invite code **{}**. The last person to join was **{}**".format(numDiff, invite.code, member.name))
     
     # Send farewell message whenever a member leaves the server
