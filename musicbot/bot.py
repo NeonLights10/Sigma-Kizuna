@@ -3879,7 +3879,7 @@ class MusicBot(discord.Client):
                     update = { "$set": {} }
                     update['$set'][invite.code] = invite.uses
                     await self.dbservers.update_one({"server_id": member.guild.id}, update)
-                    await self.safe_send_message(recordChannel, "**New invite code detected!** **{}** have joined using the invite code **{}**. The last person to join was **{}**".format(numDiff, invite.code, member.name))
+                    await self.safe_send_message(recordChannel, "**New invite code detected!** **{}** have joined using the invite code **{}**. The last person to join was **{}**".format(invite.uses, invite.code, member.name))
     
     # Send farewell message whenever a member leaves the server
     async def on_member_remove(self, member):
