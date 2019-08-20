@@ -3877,11 +3877,12 @@ class MusicBot(discord.Client):
                             update = { "$set": {} }
                             update['$set'][invite.code] = invite.uses
                             await self.dbservers.update_one({"server_id": member.guild.id}, update)
-                            await self.safe_send_message(recordChannel, "**{}** have joined using the invite code **{}**. The last person to join was **{}**".format(numDiff, invite.code, member.name))
+                            await self.safe_send_message(recordChannel, "A new member joined using the invite code **{}**. The last person to join was **{}**".format(invite.code, member.name))
                 except KeyError:
                     log.info("Invite code not in database")
                     recordChannel = member.guild.get_channel(msglog)
                     update = { "$set": {} }
+                    # Depending on how the invite was made, it is completely possible for the # of uses to be "None". Nothing I can do about that :(
                     update['$set'][invite.code] = invite.uses
                     await self.dbservers.update_one({"server_id": member.guild.id}, update)
                     await self.safe_send_message(recordChannel, "**New invite code detected!** **{}** have joined using the invite code **{}**. The last person to join was **{}**".format(invite.uses, invite.code, member.name))
