@@ -1197,7 +1197,7 @@ class MusicBot(discord.Client):
 
         # t-t-th-th-that's all folks!
 
-        async def background_saleCheck():
+        async def background_saleCheck(self):
             log.debug("ensure_future for background task complete")
             while not self.is_closed():
                 document = await self.dbservers.find_one({"server_id": message.guild.id})
@@ -1256,7 +1256,7 @@ class MusicBot(discord.Client):
 
         asyncio.ensure_future(background_saleCheck(), loop=self.loop)
 
-    async def http_request(url, criteria):
+    async def http_request(self, url, criteria):
         async with aiohttp.ClientSession() as session:
             async with session.get(url + "{}".format(criteria)) as resp:
                 if resp.status == 200:
