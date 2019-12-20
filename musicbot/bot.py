@@ -274,8 +274,10 @@ class MusicBot(discord.Client):
                 'autorole': None,
                 'ruleschannel': None,
                 'welcomechannel': None,
+                'announcementchannel': None,
                 'msglog': None,
                 'invitelog': "n",
+                'welcomemsg': None,
                 'admins': users,
                 'muted': []
                 }
@@ -1195,6 +1197,74 @@ class MusicBot(discord.Client):
 
         # t-t-th-th-that's all folks!
 
+        async def background_saleCheck():
+            log.debug("ensure_future for background task complete")
+            while not self.is_closed():
+                document = await self.dbservers.find_one({"server_id": message.guild.id})
+                if document['announcementchannel']:
+                    announcementChannel = message.guild.get_channel(int(document['announcementchannel']))
+
+                    log.debug("Checking GoG + Steam APIs for sales...")
+                    msg = "GoG Sale \n\n"
+                    gogURL = "https://embed.gog.com/games/ajax/filtered"
+                    steamURL = "https://store.steampowered.com/api/appdetails"
+
+                    gogtotal = 0
+                    steamtotal = 0
+
+                    gogResults = http_request(gogURL, "?devpub=alice_in_dissonance&mediaType=game")
+                    
+                    #for gog we can just iterate through the json array returned and check each object property "isDiscounted" for a true or not. here, we need to grab "symbol" and append it to "finalAmount" from the array "price".
+                    for product in gogResults:
+                        try:
+                            if product.get('isDiscounted'):
+                                gogtotal += 1
+                                title = product.get('title')
+                                symbol = product.get('price').get('symbol')
+                                discountPercentage = product.get('price').get('discountPercentage')
+                                price = product.get('price').get('finalAmount')
+                                formattedPrice = symbol + finalAmount
+                                msg += "{} *{}% Off* - {} USD\n".format(title, discountPercentage, formattedPrice)
+                        except: pass
+                    
+                    if gogtotal > 0:
+                        await self.safe_send_message(announcementsChannel, msg)
+
+                    msg = "Steam Sale \n\n"
+
+                    steamResults = []
+                    steamResults.append(http_request(steamURL, "?appids=286260&cc=us&l=en").get('data'))
+                    steamResults.append(http_request(steamURL, "?appids=408360&cc=us&l=en").get('data'))
+                    steamResults.append(http_request(steamURL, "?appids=441270&cc=us&l=en").get('data'))
+                    steamResults.append(http_request(steamURL, "?appids=344770&cc=us&l=en").get('data'))
+                    steamResults.append(http_request(steamURL, "?appids=753220&cc=us&l=en").get('data'))
+                    steamResults.append(http_request(steamURL, "?appids=805970&cc=us&l=en").get('data'))
+                    
+                    #for steam, steam is dumb. real dumb. we have to grab each game separately, then check if discount_percent > 0. if so, we can fortunately grab the "final_formatted" field.
+                    for product in steamResults:
+                        if product.get('price_overview').get('discount_percent') > 0:
+                            steamtotal += 1
+                            title = product.get('name')
+                            discountPercentage = product.get('price_overview').get('discount_percent')
+                            price = product.get('price_overview').get('final_formatted')
+                            msg += "{} *{}% Off* - {} USD\n".format(title, discountPercentage, price)
+
+                    if steamtotal > 0:
+                        await self.safe_send_message(announcementsChannel, msg)
+
+                await asyncio.sleep(43200) # task runs every 12 hours
+
+        asyncio.ensure_future(background_saleCheck(), loop=self.loop)
+
+    async def http_request(url, criteria):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url + "{}".format(criteria)) as resp:
+                if resp.status == 200:
+                    rjson = await resp.json()
+                    return rjson
+                else:
+                    raise exceptions.CommandError("The API returned a status code of {}. This might mean that the service is unavailable at this time. Try again later?".format(resp.status))
+
     def _gen_embed(self):
         """Provides a basic template for embeds"""
         e = discord.Embed(colour=0x1abc9c)
@@ -1210,44 +1280,46 @@ class MusicBot(discord.Client):
         else:
             raise exceptions.CommandError("You are not in a voice channel!")
 
-    async def cmd_purgedb(self):
+    async def cmd_purgedb(self, guild):
         """
         Usage:
             {command_prefix}purgedb
-        Resets DB to default. Useful when document fields are added/removed.
+        Adds fields with default values to an existing document if a new field is added in development.
         """
-        result = await self.dbservers.delete_many()
-        for guild in self.guilds:
-            #log.info(server.id)
-            await self._check_document(guild, guild.id)
+        await self.dbservers.update({"server_id": guild.id, 'ruleschannel': {$exists : false}}, {$set: {'ruleschannel': None}})
+        await self.dbservers.update({"server_id": guild.id, 'welcomechannel': {$exists : false}}, {$set: {'welcomechannel': None}})
+        await self.dbservers.update({"server_id": guild.id, 'announcementchannel': {$exists : false}}, {$set: {'announcementchannel': None}})
+        await self.dbservers.update({"server_id": guild.id, 'msglog': {$exists : false}}, {$set: {'msglog': None}})
+        await self.dbservers.update({"server_id": guild.id, 'invitelog': {$exists : false}}, {$set: {'invitelog': 'n'}})
+        await self.dbservers.update({"server_id": guild.id, 'welcomemsg': {$exists : false}}, {$set: {'welcomemsg': None}})
 
     async def cmd_dbconfig(self, guild, message, channel_mentions, leftover_args, config = None, channelmention = None):
         """
         Usage:
-            {command_prefix}dbconfig [welcomechannel/ruleschannel/msglog/invitelog] [channel_mention]
-        Changes the value in the database config document.
-        For welcomechannel, ruleschannel, and msglog, please specify a specific channel.
+            {command_prefix}dbconfig [welcomechannel/ruleschannel/msglog] [channel_mention]
+        Changes the value in the database config document to the specified channel.
         You can currently set the channel for the welcome message, the rules channel, and the channel for outputting logs.
-        For invitelog, do not put anything besides the keyword. It will either enable/disable it.
         """
         if config:
+            config = config.lower()
             if channel_mentions:
-                if config.lower() == "welcomechannel":
+                if config == "welcomechannel":
                     await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'welcomechannel': channel_mentions[0].id}})
                     return Response("Set channel <#{}> as Welcome Message Channel".format(channel_mentions[0].id))
 
-                elif config.lower() == "ruleschannel":
+                elif config == "ruleschannel":
                     await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'ruleschannel': channel_mentions[0].id}})
                     return Response("Set channel <#{}> as Rules Channel".format(channel_mentions[0].id))
 
-                elif config.lower() == "msglog":
+                elif config == "msglog":
                     await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'msglog': channel_mentions[0].id}})
                     return Response("Set channel <#{}> as Log Channel".format(channel_mentions[0].id))
-                    
+
                 else:
                     raise exceptions.CommandError("Invalid database config value.")
             else:
-                if config.lower() == "invitelog":
+                raise exceptions.CommandError("Specify a channel!")
+                if config == "invitelog":
                     document = await self.dbservers.find_one({"server_id": guild.id})
                     if document['invitelog'] == "y":
                         await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'invitelog': "n"}})
@@ -1255,6 +1327,7 @@ class MusicBot(discord.Client):
                     else:
                         await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'invitelog': "y"}})
                         return Response("Enabled invite logging")
+                        
                 else:
                     raise exceptions.CommandError("Specify a channel!")
         else:
@@ -1329,11 +1402,6 @@ class MusicBot(discord.Client):
                         raise exceptions.CommandError("Invalid number specified.", expire_in=20)
                     try:
                         deleted = await channel.purge(limit=num+1, check=user_check)
-
-                        document = await self.dbservers.find_one({"server_id": message.guild.id})
-                        if document['msglog']:
-                            recordChannel = message.guild.get_channel(int(document['msglog']))
-                            await self.safe_send_message(recordChannel, "**The following {} messages were purged by {}**".format(len(deleted), message.author.name))
                         msg = "The last {} messages by {} were purged".format(len(deleted), user.name)
                         return Response(msg, reply=False, delete_after=20)
                     except discord.Forbidden:
@@ -1345,13 +1413,8 @@ class MusicBot(discord.Client):
                 raise exceptions.CommandError("Invalid number specified.", expire_in=20)
 
             try:
-                deleted = await channel.purge(limit=num, before=message)
-
-                document = await self.dbservers.find_one({"server_id": message.guild.id})
-                if document['msglog']:
-                    recordChannel = message.guild.get_channel(int(document['msglog']))
-                    await self.safe_send_message(recordChannel, "**The following {} messages were purged by {}**".format(len(deleted), message.author.name))
-                msg = str(len(deleted)) + " message(s) purged."
+                await channel.purge(limit=num, before=message)
+                msg = str(num) + " message(s) purged."
                 return Response(msg, reply=False, delete_after=20)
             except discord.Forbidden:
                 raise exceptions.CommandError("It seems like I don't have the permissions to do that. Check your server settings?", expire_in=20)
@@ -1548,22 +1611,22 @@ class MusicBot(discord.Client):
         except ValueError:
             raise exceptions.CommandError("Please quote the role properly", expire_in=30)
 
-        #Latest variable parameter parse system. Dumps user mentions from the leftover_args list
+        # Latest variable parameter parse system. Dumps user mentions from the leftover_args list
         if user_mentions:
             pattern = re.compile('<@!?\d{17,18}>')
-            #Ensures that only one parameter is not a user mention. Otherwise it means the parameter order is wrong or there are too many.
+            # Ensures that only one parameter is not a user mention. Otherwise it means the parameter order is wrong or there are too many.
             for x in range(len(leftover_args) - 1):
                 if not pattern.match(leftover_args[x]):
                     raise exceptions.CommandError("Incorrect argument order or too many arguments!", expire_in=30)
             lcopy = leftover_args[:]
-            #Dump all user mentions
+            # Dump all user mentions
             for arg in lcopy:
                 if pattern.match(arg):
                     leftover_args.remove(arg)
 
-        #Only thing left should be the role name now
+        # Only thing left should be the role name now
         rolename = leftover_args.pop()
-        
+
         role_permissions = guild.default_role
         role_permissions = role_permissions.permissions
         role_permissions.change_nickname = True
@@ -2380,7 +2443,12 @@ class MusicBot(discord.Client):
             while True:
                 try:
                     info = await self.downloader.extract_info(player.playlist.loop, song_url, download=False, process=False)
-                    info_process = await self.downloader.extract_info(player.playlist.loop, song_url, download=False)
+                    # If there is an exception arise when processing we go on and let extract_info down the line report it
+                    # because info might be a playlist and thing that's broke it might be individual entry
+                    try:
+                        info_process = await self.downloader.extract_info(player.playlist.loop, song_url, download=False)
+                    except:
+                        info_process = None
                     log.debug(info)
                     if info_process and info and info_process.get('_type', None) == 'playlist' and 'entries' not in info and not info.get('url', '').startswith('ytsearch'):
                         use_url = info_process.get('webpage_url', None) or info_process.get('url', None)
@@ -2597,7 +2665,12 @@ class MusicBot(discord.Client):
             while True:
                 try:
                     info = await self.downloader.extract_info(player.playlist.loop, song_url, download=False, process=False)
-                    info_process = await self.downloader.extract_info(player.playlist.loop, song_url, download=False)
+                    # If there is an exception arise when processing we go on and let extract_info down the line report it
+                    # because info might be a playlist and thing that's broke it might be individual entry
+                    try:
+                        info_process = await self.downloader.extract_info(player.playlist.loop, song_url, download=False)
+                    except:
+                        info_process = None
                     log.debug(info)
                     if info_process and info and info_process.get('_type', None) == 'playlist' and 'entries' not in info and not info.get('url', '').startswith('ytsearch'):
                         use_url = info_process.get('webpage_url', None) or info_process.get('url', None)
@@ -3831,13 +3904,13 @@ class MusicBot(discord.Client):
         return Response(codeblock.format(result))
 
 #############################################
-    
     # When a member joins, log in console, then check if autorole setting is enabled.
         # If autorole is enabled, assign the role to the new member.
     # Check for a welcome channel
         # If welcomechannel config is enabled, check for ruleschannel to determine which welcome message to send.
     # Check for invite logging and if a logging channel is specified.
         # If invite logging is enabled, pull the current list of invites and cross-reference use statistics to see which invite link was used, then record in the logging channel. 
+
     async def on_member_join(self, member):
         log.info("A new member joined in {}".format(member.guild.name))
 
@@ -3857,39 +3930,40 @@ class MusicBot(discord.Client):
                 await self.safe_send_message(member.guild.get_channel(welcomechannel), "Istariana vilseriol <@{}>! Welcome to the {} Discord server. Please read our <#{}>, thank you.".format(member.id, member.guild.name, ruleschannel))
             else:
                 await self.safe_send_message(member.guild.get_channel(welcomechannel), "Istariana vilseriol <@{}>! Welcome to the {} Discord server.".format(member.id, member.guild.name))
-        if (document['invitelog'] == "y") and document['msglog']:
-            log.info("Invite logging is enabled.")
-            msglog = int(document['msglog'])
+        
+            if (document['invitelog'] == "y") and document['msglog']:
+                log.info("Invite logging is enabled.")
+                msglog = int(document['msglog'])
 
-            #Grab list of invites and vanity URL, then append vanity URL to list
-            invites = await member.guild.invites()
-            vanity = await member.guild.vanity_invite()
-            invites.append(vanity)
+                #Grab list of invites and vanity URL, then append vanity URL to list
+                invites = await member.guild.invites()
+                vanity = await member.guild.vanity_invite()
+                invites.append(vanity)
 
-            for invite in invites:
-                try:
-                    if document[invite.code]:
-                        log.info("Invite code in database")
-                        if invite.uses > int(document[invite.code]):
-                            recordChannel = member.guild.get_channel(msglog)
-                            numDiff = invite.uses - int(document[invite.code])
-                            #Allow for variable index in the mongo syntax
-                            update = { "$set": {} }
-                            update['$set'][invite.code] = invite.uses
-                            await self.dbservers.update_one({"server_id": member.guild.id}, update)
-                            await self.safe_send_message(recordChannel, "A new member joined using the invite code **{}**. The last person to join was **{}**".format(invite.code, member.name))
-                except KeyError:
-                    log.info("Invite code not in database")
-                    recordChannel = member.guild.get_channel(msglog)
-                    update = { "$set": {} }
-                    # Depending on how the invite was made, it is completely possible for the # of uses to be "None". Nothing I can do about that :(
-                    update['$set'][invite.code] = invite.uses
-                    await self.dbservers.update_one({"server_id": member.guild.id}, update)
-                    await self.safe_send_message(recordChannel, "**New invite code detected!** **{}** have joined using the invite code **{}**. The last person to join was **{}**".format(invite.uses, invite.code, member.name))
-    
+                for invite in invites:
+                    try:
+                        if document[invite.code]:
+                            log.info("Invite code in database")
+                            if invite.uses > int(document[invite.code]):
+                                recordChannel = member.guild.get_channel(msglog)
+                                numDiff = invite.uses - int(document[invite.code])
+                                #Allow for variable index in the mongo syntax
+                                update = { "$set": {} }
+                                update['$set'][invite.code] = invite.uses
+                                await self.dbservers.update_one({"server_id": member.guild.id}, update)
+                                await self.safe_send_message(recordChannel, "A new member joined using the invite code **{}**. The last person to join was **{}**".format(invite.code, member.name))
+                    except KeyError:
+                        log.info("Invite code not in database")
+                        recordChannel = member.guild.get_channel(msglog)
+                        update = { "$set": {} }
+                        # Depending on how the invite was made, it is completely possible for the # of uses to be "None". Nothing I can do about that :(
+                        update['$set'][invite.code] = invite.uses
+                        await self.dbservers.update_one({"server_id": member.guild.id}, update)
+                        await self.safe_send_message(recordChannel, "**New invite code detected!** **{}** have joined using the invite code **{}**. The last person to join was **{}**".format(invite.uses, invite.code, member.name))
+        
     # Send farewell message whenever a member leaves the server
     async def on_member_remove(self, member):
-        document = await self.dbservers.find_one({"server_id": member.guild.id})
+        document = await self.dbservers.find_one({"server_id": message.guild.id})
         if document['welcomechannel']:
             welcomechannel = int(document['welcomechannel'])
             await self.safe_send_message(member.guild.get_channel(welcomechannel), "Farewell {}! (ID: {})".format(member.name, member.id))
@@ -3925,7 +3999,7 @@ class MusicBot(discord.Client):
 
     # Logs an edited message, which includes User + Discriminator, User ID, channel, message contents
     async def on_message_edit(self, before, after):
-        document = await self.dbservers.find_one({"server_id": before.guild.id})
+        document = await self.dbservers.find_one({"server_id": message.guild.id})
         if document['msglog']:
             msglog = int(document['msglog'])
             if not before.author.id == self.user.id:
@@ -3942,7 +4016,7 @@ class MusicBot(discord.Client):
         guild = after.guild
         if patreon:
             if not patreon in after.roles:
-                #To prevent search through the entire audit log, limit to 1 minute in the past
+                # To prevent search through the entire audit log, limit to 1 minute in the past
                 async for entry in guild.audit_logs(action=discord.AuditLogAction.member_role_update, user=self.get_user(216303189073461248), after=(datetime.datetime.now() - datetime.timedelta(minutes=1))):
                     if entry.target == before:
                         try:
@@ -3955,7 +4029,7 @@ class MusicBot(discord.Client):
                             raise exceptions.CommandError("Something happened while attempting to add role.")
 
 #############################################
-    
+
     async def get_msgid(self, message, attempts = 1):
         pipeline = [{'$match': {'$and': [{'server_id': message.guild.id}, {'author_id': {'$not': {'$regex': str(self.user.id)}}}] }}, {'$sample': {'size': 1}}]
         async for msgid in self.dbmsgid.aggregate(pipeline):
@@ -3992,15 +4066,6 @@ class MusicBot(discord.Client):
         await self.dbmsgid.insert_one(post)
 
         message_content = message.content.strip()
-
-        '''
-        if self.user.id in message.raw_mentions and message.author != self.user:
-            log.info("Found a mention of myself")  
-            msg = await self.get_msgid(message)
-            log.info("Messaged retrieved: " + msg)
-            parsedmessage = re.sub('<@!?\d{18}>', ' ', msg).strip()
-            await self.safe_send_message(message.channel, parsedmessage)
-        '''
 
         if not message_content.startswith(self.config.command_prefix):
             return
