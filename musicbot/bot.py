@@ -1200,9 +1200,10 @@ class MusicBot(discord.Client):
         async def background_saleCheck(self):
             log.debug("ensure_future for background task complete")
             while not self.is_closed():
-                document = await self.dbservers.find_one({"server_id": message.guild.id})
+                #This needs to be hardcoded, but that's ok because it's specific to AiD server only
+                document = await self.dbservers.find_one({"server_id": 201960084568276992})
                 if document['announcementchannel']:
-                    announcementChannel = message.guild.get_channel(int(document['announcementchannel']))
+                    announcementChannel = self.get_channel(int(document['announcementchannel']))
 
                     log.debug("Checking GoG + Steam APIs for sales...")
                     msg = "GoG Sale \n\n"
