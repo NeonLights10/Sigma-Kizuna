@@ -86,16 +86,16 @@ class MusicBot(discord.Client):
         self.cached_app_info = None
         self.last_status = None
 
-        self.uptime = time.time()       
-        self.message_count = 0      
-        self.autoassignrole = False     
+        self.uptime = time.time()
+        self.message_count = 0
+        self.autoassignrole = False
         self.autorole = {"default": "default"}
         self.database_name = "Valhalla"
 
         self.config = Config(config_file)
-        
+
         self._setup_logging()
-        
+
         self.permissions = Permissions(perms_file, grant_all=[self.config.owner_id])
         self.str = Json(self.config.i18n_file)
 
@@ -114,6 +114,7 @@ class MusicBot(discord.Client):
         self.db = self.mclient[self.database_name]
         self.dbservers = self.db.servers
         self.dbmsgid = self.db.msgid
+        self.dbgames = self.db.games
 
         log.info('Starting RuRune {}'.format(BOTVERSION))
 
@@ -863,10 +864,7 @@ class MusicBot(discord.Client):
         log.debug("Validating permissions config")
         await self.permissions.async_validate(self)
 
-
-
-#######################################################################################################################
-
+################################################################################### safe methods + final ready execution
 
     async def safe_send_message(self, dest, content, **kwargs):
         tts = kwargs.pop('tts', False)
@@ -1197,7 +1195,64 @@ class MusicBot(discord.Client):
 
         # t-t-th-th-that's all folks!
 
-        async def background_saleCheck(self):
+####################################################################################################################### background tasks
+
+        async def background_gogCheck(self):
+            log.debug("ensure_future for background task complete")
+            while not self.is_closed():
+                #This needs to be hardcoded, but that's ok because it's specific to AiD server only
+                #The other way to do this would be to start the background task from a command, but then it would have to be restarted every time. Not as nice.
+                document = await self.dbservers.find_one({"server_id": 201960084568276992})
+                if document['announcementchannel']:
+                    announcementChannel = self.get_channel(int(document['announcementchannel']))
+
+                    log.debug("Checking GoG API for sales...")
+
+                    msg = "GoG Sale \n\n"
+
+                    gogURL = "https://embed.gog.com/games/ajax/filtered"
+
+                    gogtotal = 0
+
+                    try:
+                        gogResults = http_request(gogURL, "?devpub=alice_in_dissonance&mediaType=game").get('products')
+                        time = 86400
+
+                        #for gog we can just iterate through the json array returned and check each object property "isDiscounted" for a true or not. here, we need to grab "symbol" and append it to "finalAmount" from the array "price".
+                        for product in gogResults:
+                            document = await self.dbservers.find_one(product.get('id'))
+
+                            if document == None:
+                                post = {
+                                    'id': int(product.get('id')),
+                                    'isDiscounted': product.get('isDiscounted')
+                                }
+                                log.info("Inserting document")
+                                await self.dbgames.insert_one(post)
+                            else:
+                                if product.get('isDiscounted') and !document['isDiscounted']:
+                                    gogtotal += 1
+                                    title = product.get('title')
+                                    symbol = product.get('price').get('symbol')
+                                    discountPercentage = product.get('price').get('discountPercentage')
+                                    price = product.get('price').get('finalAmount')
+                                    formattedPrice = symbol + finalAmount
+                                    msg += "{} *{}% Off* - {} USD\n".format(title, discountPercentage, formattedPrice)
+                                    await self.dbgames.update_one({"id": int(product.get('id'))}, {"$set": {'isDiscounted': true}})
+                                else if !product.get('isDiscounted') and document['isDiscounted']:
+                                    await self.dbgames.update_one({"id": int(product.get('id'))}, {"$set": {'isDiscounted': false}})
+                    
+                    if gogtotal > 0:
+                        await self.safe_send_message(announcementsChannel, msg)
+
+                    except:
+                        log.info("HTTP Request failed or JSON format has changed. Possible error serverside? Will try again in 5 minutes")
+                        time = 300
+
+                await asyncio.sleep(time) # task runs every 24 hours
+
+        #turns out that for steam, we can't actually return the 
+        async def background_steamCheck(self):
             log.debug("ensure_future for background task complete")
             while not self.is_closed():
                 #This needs to be hardcoded, but that's ok because it's specific to AiD server only
@@ -1205,57 +1260,60 @@ class MusicBot(discord.Client):
                 if document['announcementchannel']:
                     announcementChannel = self.get_channel(int(document['announcementchannel']))
 
-                    log.debug("Checking GoG + Steam APIs for sales...")
-                    msg = "GoG Sale \n\n"
-                    gogURL = "https://embed.gog.com/games/ajax/filtered"
+                    log.debug("Checking Steam APIs for sales...")
+
                     steamURL = "https://store.steampowered.com/api/appdetails"
 
-                    gogtotal = 0
                     steamtotal = 0
-
-                    gogResults = http_request(gogURL, "?devpub=alice_in_dissonance&mediaType=game")
-                    
-                    #for gog we can just iterate through the json array returned and check each object property "isDiscounted" for a true or not. here, we need to grab "symbol" and append it to "finalAmount" from the array "price".
-                    for product in gogResults:
-                        try:
-                            if product.get('isDiscounted'):
-                                gogtotal += 1
-                                title = product.get('title')
-                                symbol = product.get('price').get('symbol')
-                                discountPercentage = product.get('price').get('discountPercentage')
-                                price = product.get('price').get('finalAmount')
-                                formattedPrice = symbol + finalAmount
-                                msg += "{} *{}% Off* - {} USD\n".format(title, discountPercentage, formattedPrice)
-                        except: pass
-                    
-                    if gogtotal > 0:
-                        await self.safe_send_message(announcementsChannel, msg)
 
                     msg = "Steam Sale \n\n"
 
                     steamResults = []
-                    steamResults.append(http_request(steamURL, "?appids=286260&cc=us&l=en").get('data'))
-                    steamResults.append(http_request(steamURL, "?appids=408360&cc=us&l=en").get('data'))
-                    steamResults.append(http_request(steamURL, "?appids=441270&cc=us&l=en").get('data'))
-                    steamResults.append(http_request(steamURL, "?appids=344770&cc=us&l=en").get('data'))
-                    steamResults.append(http_request(steamURL, "?appids=753220&cc=us&l=en").get('data'))
-                    steamResults.append(http_request(steamURL, "?appids=805970&cc=us&l=en").get('data'))
-                    
-                    #for steam, steam is dumb. real dumb. we have to grab each game separately, then check if discount_percent > 0. if so, we can fortunately grab the "final_formatted" field.
-                    for product in steamResults:
-                        if product.get('price_overview').get('discount_percent') > 0:
-                            steamtotal += 1
-                            title = product.get('name')
-                            discountPercentage = product.get('price_overview').get('discount_percent')
-                            price = product.get('price_overview').get('final_formatted')
-                            msg += "{} *{}% Off* - {} USD\n".format(title, discountPercentage, price)
+                    #Lookie lookie! steam puts all of their json inside a wrapper with the appid as the name. Completely unnecessary
+                    try:
+                        steamResults.append(http_request(steamURL, "?appids=286260&cc=us&l=en").get('286260').get('data'))
+                        steamResults.append(http_request(steamURL, "?appids=408360&cc=us&l=en").get('408360').get('data'))
+                        steamResults.append(http_request(steamURL, "?appids=441270&cc=us&l=en").get('441270').get('data'))
+                        steamResults.append(http_request(steamURL, "?appids=344770&cc=us&l=en").get('344770').get('data'))
+                        steamResults.append(http_request(steamURL, "?appids=753220&cc=us&l=en").get('753220').get('data'))
+                        steamResults.append(http_request(steamURL, "?appids=805970&cc=us&l=en").get('805970').get('data'))
 
-                    if steamtotal > 0:
-                        await self.safe_send_message(announcementsChannel, msg)
+                        time = 86400
+                        
+                        #for steam, steam is dumb. real dumb. we have to grab each game separately, then check if discount_percent > 0. if so, we can fortunately grab the "final_formatted" field.
+                        for product in steamResults:
+                            document = await self.dbgames.find_one(product.get('id'))
 
-                await asyncio.sleep(43200) # task runs every 12 hours
+                            if document == None:
+                                post = {
+                                    'id': int(product.get('steam_appid')),
+                                    'discountPercentage': product.get('price_overview').get('discount_percent')
+                                }
+                                log.info("Inserting document")
+                                await self.dbgames.insert_one(post)
+                            else:
+                                if product.get('price_overview').get('discount_percent') > 0 and document['discountPercentage'] == 0:
+                                    steamtotal += 1
+                                    title = product.get('name')
+                                    discountPercentage = product.get('price_overview').get('discount_percent')
+                                    price = product.get('price_overview').get('final_formatted')
+                                    msg += "{} *{}% Off* - {} USD\n".format(title, discountPercentage, price)
+                                    await self.dbgames.update_one({"id": int(product.get('id'))}, {"$set": {'discountPercentage': int(discountPercentage)}})
+                                else if product.get('price_overview').get('discount_percent') == 0 and document['discountPercentage'] > 0:
+                                    await self.dbgames.update_one({"id": int(product.get('id'))}, {"$set": {'discountPercentage': 0}})
 
-        asyncio.ensure_future(background_saleCheck(), loop=self.loop)
+                        if steamtotal > 0:
+                            await self.safe_send_message(announcementsChannel, msg)
+                    except:
+                        log.info("HTTP Request failed or JSON format has changed. Possible error serverside? Will try again in 5 minutes")
+                        time = 300
+
+                await asyncio.sleep(86400) # task runs every 24 hours
+
+        asyncio.ensure_future(background_gogCheck(), loop=self.loop)
+        asyncio.ensure_future(background_steamCheck(), Loop=self.loop)
+
+####################################################################################################################### utility methods
 
     async def http_request(self, url, criteria):
         async with aiohttp.ClientSession() as session:
@@ -1273,7 +1331,7 @@ class MusicBot(discord.Client):
         e.set_footer(text="Sugoi!")
         return e
 
-#######################################################
+####################################################### custom commands
 
     async def cmd_screenshare(self, guild, author):
         if author.voice:
@@ -1901,7 +1959,7 @@ class MusicBot(discord.Client):
                         raise exceptions.CommandError("Couldn't set slowmode! I might not have permissions to do so.")
                 return Response("Slowmode has been enabled in " + channel.name, reply=False, delete_after=30)           
 
-##############################################
+############################################## default commands
 
     async def cmd_resetplaylist(self, player, channel):
         """
@@ -2085,7 +2143,7 @@ class MusicBot(discord.Client):
             )
         return True
 
-###############################################
+############################################### extra music queue management commands
 
     async def cmd_promote(self, player, position=None):
         """
@@ -2579,7 +2637,8 @@ class MusicBot(discord.Client):
                 reply_text %= (btext, position, ftimedelta(time_until))
 
         return Response(reply_text, delete_after=30)
-################################################
+
+################################################ default music commands
 
     async def cmd_play(self, message, player, channel, author, permissions, leftover_args, song_url):
         """
@@ -3917,14 +3976,14 @@ class MusicBot(discord.Client):
 
         return Response(codeblock.format(result))
 
-#############################################
+############################################# events
+
     # When a member joins, log in console, then check if autorole setting is enabled.
         # If autorole is enabled, assign the role to the new member.
     # Check for a welcome channel
         # If welcomechannel config is enabled, check for ruleschannel to determine which welcome message to send.
     # Check for invite logging and if a logging channel is specified.
         # If invite logging is enabled, pull the current list of invites and cross-reference use statistics to see which invite link was used, then record in the logging channel. 
-
     async def on_member_join(self, member):
         log.info("A new member joined in {}".format(member.guild.name))
 
@@ -4042,7 +4101,7 @@ class MusicBot(discord.Client):
                         except discord.HTTPException:
                             raise exceptions.CommandError("Something happened while attempting to add role.")
 
-#############################################
+############################################# message handler & command parser
 
     async def get_msgid(self, message, attempts = 1):
         pipeline = [{'$match': {'$and': [{'server_id': message.guild.id}, {'author_id': {'$not': {'$regex': str(self.user.id)}}}] }}, {'$sample': {'size': 1}}]
