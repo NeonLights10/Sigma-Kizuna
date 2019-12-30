@@ -1259,7 +1259,7 @@ class MusicBot(discord.Client):
             for arg in lcopy:
                 role = discord.utils.find(lambda r: r.name == arg, guild.roles)
                 if role: 
-                    if role in document['selfrole']:
+                    if role.name in document['selfrole']:
                         try:
                             await user.add_roles(role)
                             return Response("Added you to the following roles.", delete_after=30)
@@ -4021,7 +4021,7 @@ class MusicBot(discord.Client):
 
     # Logs an edited message, which includes User + Discriminator, User ID, channel, message contents
     async def on_message_edit(self, before, after):
-        document = await self.dbservers.find_one({"server_id": message.guild.id})
+        document = await self.dbservers.find_one({"server_id": before.guild.id})
         if document['msglog']:
             msglog = int(document['msglog'])
             if not before.author.id == self.user.id:
