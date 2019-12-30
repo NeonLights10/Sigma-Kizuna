@@ -1345,12 +1345,12 @@ class MusicBot(discord.Client):
             {command_prefix}purgedb
         Adds fields with default values to an existing document if a new field is added in development.
         """
-        await self.dbservers.update({"server_id": guild.id, 'ruleschannel': {"$exists": false}}, {"$set": {'ruleschannel': None}})
-        await self.dbservers.update({"server_id": guild.id, 'welcomechannel': {"$exists": false}}, {"$set": {'welcomechannel': None}})
-        await self.dbservers.update({"server_id": guild.id, 'announcementchannel': {"$exists": false}}, {"$set": {'announcementchannel': None}})
-        await self.dbservers.update({"server_id": guild.id, 'msglog': {"$exists": false}}, {"$set": {'msglog': None}})
-        await self.dbservers.update({"server_id": guild.id, 'invitelog': {"$exists": false}}, {"$set": {'invitelog': 'n'}})
-        await self.dbservers.update({"server_id": guild.id, 'welcomemsg': {"$exists": false}}, {"$set": {'welcomemsg': None}})
+        await self.dbservers.update_one({"server_id": guild.id, 'ruleschannel': {"$exists": false}}, {"$set": {'ruleschannel': None}})
+        await self.dbservers.update_one({"server_id": guild.id, 'welcomechannel': {"$exists": false}}, {"$set": {'welcomechannel': None}})
+        await self.dbservers.update_one({"server_id": guild.id, 'announcementchannel': {"$exists": false}}, {"$set": {'announcementchannel': None}})
+        await self.dbservers.update_one({"server_id": guild.id, 'msglog': {"$exists": false}}, {"$set": {'msglog': None}})
+        await self.dbservers.update_one({"server_id": guild.id, 'invitelog': {"$exists": false}}, {"$set": {'invitelog': 'n'}})
+        await self.dbservers.update_one({"server_id": guild.id, 'welcomemsg': {"$exists": false}}, {"$set": {'welcomemsg': None}})
 
     async def cmd_dbconfig(self, guild, message, channel_mentions, leftover_args, config = None, channelmention = None):
         """
@@ -4072,7 +4072,7 @@ class MusicBot(discord.Client):
 
     # Logs an edited message, which includes User + Discriminator, User ID, channel, message contents
     async def on_message_edit(self, before, after):
-        document = await self.dbservers.find_one({"server_id": message.guild.id})
+        document = await self.dbservers.find_one({"server_id": before.guild.id})
         if document['msglog']:
             msglog = int(document['msglog'])
             if not before.author.id == self.user.id:
