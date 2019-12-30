@@ -1208,8 +1208,8 @@ class MusicBot(discord.Client):
             {command_prefix}purgedb
         Adds fields with default values to an existing document if a new field is added in development.
         """
-        await self.dbservers.update({'server_id': guild.id, 'msglog': {"$exists": false}}, {"$set": {'msglog': None}})
-        await self.dbservers.update({'server_id': guild.id, 'selfrole': {"$exists": false}}, {"$set": {'selfrole': None}})
+        await self.dbservers.update_one({'server_id': guild.id, 'msglog': {"$exists": false}}, {"$set": {'msglog': None}})
+        await self.dbservers.update_one({'server_id': guild.id, 'selfrole': {"$exists": false}}, {"$set": {'selfrole': None}})
 
     async def cmd_dbconfig(self, guild, message, channel_mentions, leftover_args, config = None, channelmention = None):
         """
@@ -1245,7 +1245,7 @@ class MusicBot(discord.Client):
                 post.append(role.name)
             else:
                 raise exceptions.CommandError("Role {} not found! Did you spell it wrong?".format(arg))
-        await self.dbservers.update({"server_id": guild.id}, {"$set": {'selfrole': post}})
+        await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'selfrole': post}})
         return Response("Enabled selfrole for the following roles.", delete_after=30)
 
     async def cmd_selfrole(self, guild, message, author, leftover_args):
