@@ -1245,7 +1245,7 @@ class MusicBot(discord.Client):
                 post.append(role.name)
             else:
                 raise exceptions.CommandError("Role {} not found! Did you spell it wrong?".format(arg))
-        await self.dbservers.update({"server_id": guild.id}, {$set: {'selfrole': post}})
+        await self.dbservers.update({"server_id": guild.id}, {"$set": {'selfrole': post}})
         return Response("Enabled selfrole for the following roles.", delete_after=30)
 
     async def cmd_selfrole(self, guild, message, author, leftover_args):
