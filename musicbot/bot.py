@@ -1208,8 +1208,8 @@ class MusicBot(discord.Client):
             {command_prefix}purgedb
         Adds fields with default values to an existing document if a new field is added in development.
         """
-        await self.dbservers.update({'server_id': guild.id, 'msglog': {$exists: false}}, {$set: {'msglog': None}})
-        await self.dbservers.update({'server_id': guild.id, 'selfrole': {$exists: false}}, {$set: {'selfrole': None}})
+        await self.dbservers.update({'server_id': guild.id, 'msglog': {"$exists": false}}, {"$set": {'msglog': None}})
+        await self.dbservers.update({'server_id': guild.id, 'selfrole': {"$exists": false}}, {"$set": {'selfrole': None}})
 
     async def cmd_dbconfig(self, guild, message, channel_mentions, leftover_args, config = None, channelmention = None):
         """
