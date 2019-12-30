@@ -3993,23 +3993,9 @@ class MusicBot(discord.Client):
     # Logs a deleted message, which includes User + Discriminator, User ID, channel, message contents, and attachments (if any)
     async def on_message_delete(self, message):
         document = await self.dbservers.find_one({"server_id": message.guild.id})
-        if document['msglog']:
-            msglog = int(document['msglog'])
-            if not message.author.id == self.user.id:
-                if re.match('^{}'.format(self.config.command_prefix), message.content) == None:
-                    recordChannel = message.guild.get_channel(msglog)
-                    await self.safe_send_message(recordChannel, "**{}#{}** (ID: {}) message has been deleted from **#{}:**".format(message.author.name, message.author.discriminator, message.author.id, message.channel.name))
-                    await self.safe_send_message(recordChannel, "**Message:** {}".format(message.content))
-                    if len(message.attachments) > 0:
-                        for entry in message.attachments:
-                            await self.safe_send_message(recordChannel, "**Attachment:** {}".format(entry.proxy_url))
-
-    # Logs bulk deleted messages (for purges)
-    async def on_bulk_message_delete(self, messages):
-        document = await self.dbservers.find_one({"server_id": messages[0].guild.id})
-        if document['msglog']:
-            msglog = int(document['msglog'])
-            for message in messages:
+        try:
+            if document['msglog']:
+                msglog = int(document['msglog'])
                 if not message.author.id == self.user.id:
                     if re.match('^{}'.format(self.config.command_prefix), message.content) == None:
                         recordChannel = message.guild.get_channel(msglog)
@@ -4018,19 +4004,39 @@ class MusicBot(discord.Client):
                         if len(message.attachments) > 0:
                             for entry in message.attachments:
                                 await self.safe_send_message(recordChannel, "**Attachment:** {}".format(entry.proxy_url))
+        except: pass
 
+    # Logs bulk deleted messages (for purges)
+    async def on_bulk_message_delete(self, messages):
+        document = await self.dbservers.find_one({"server_id": messages[0].guild.id})
+        try:
+            if document['msglog']:
+                msglog = int(document['msglog'])
+                for message in messages:
+                    if not message.author.id == self.user.id:
+                        if re.match('^{}'.format(self.config.command_prefix), message.content) == None:
+                            recordChannel = message.guild.get_channel(msglog)
+                            await self.safe_send_message(recordChannel, "**{}#{}** (ID: {}) message has been deleted from **#{}:**".format(message.author.name, message.author.discriminator, message.author.id, message.channel.name))
+                            await self.safe_send_message(recordChannel, "**Message:** {}".format(message.content))
+                            if len(message.attachments) > 0:
+                                for entry in message.attachments:
+                                    await self.safe_send_message(recordChannel, "**Attachment:** {}".format(entry.proxy_url))
+        except: pass
+        
     # Logs an edited message, which includes User + Discriminator, User ID, channel, message contents
     async def on_message_edit(self, before, after):
         document = await self.dbservers.find_one({"server_id": before.guild.id})
-        if document['msglog']:
-            msglog = int(document['msglog'])
-            if not before.author.id == self.user.id:
-                if not before.content == after.content:
-                    recordChannel = before.guild.get_channel(msglog)
-                    if recordChannel:
-                        await self.safe_send_message(recordChannel, "**{}#{}** (ID: {}) message has been edited in **#{}:**".format(before.author.name, before.author.discriminator, before.author.id, before.channel.name))
-                        await self.safe_send_message(recordChannel, "**Old Message:** {}".format(before.content))
-                        await self.safe_send_message(recordChannel, "**New Message:** {}".format(after.content))
+        try:    
+            if document['msglog']:
+                msglog = int(document['msglog'])
+                if not before.author.id == self.user.id:
+                    if not before.content == after.content:
+                        recordChannel = before.guild.get_channel(msglog)
+                        if recordChannel:
+                            await self.safe_send_message(recordChannel, "**{}#{}** (ID: {}) message has been edited in **#{}:**".format(before.author.name, before.author.discriminator, before.author.id, before.channel.name))
+                            await self.safe_send_message(recordChannel, "**Old Message:** {}".format(before.content))
+                            await self.safe_send_message(recordChannel, "**New Message:** {}".format(after.content))
+        except: pass
 
 #############################################
 
