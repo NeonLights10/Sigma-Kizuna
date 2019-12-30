@@ -1261,7 +1261,7 @@ class MusicBot(discord.Client):
                 if role: 
                     if role.name in document['selfrole']:
                         try:
-                            await user.add_roles(role)
+                            await author.add_roles(role)
                             return Response("Added you to the following roles.", delete_after=30)
                         except:
                             raise exceptions.CommandError("Failed to add {} to role {}".format(author.name, role.name))
