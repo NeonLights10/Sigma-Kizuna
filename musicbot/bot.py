@@ -273,7 +273,9 @@ class MusicBot(discord.Client):
         post = {'server_id': id,
                 'autorole': None,
                 'admins': users,
-                'muted': []
+                'muted': [],
+                'msglog': None,
+                'selfrole': None
                 }
         log.info("Inserting document")
         await self.dbservers.insert_one(post)
@@ -1200,6 +1202,76 @@ class MusicBot(discord.Client):
 
 #######################################################
 
+    async def cmd_purgedb(self, guild):
+        """
+        Usage:
+            {command_prefix}purgedb
+        Adds fields with default values to an existing document if a new field is added in development.
+        """
+        await self.dbservers.update({"server_id": guild.id, 'msglog': {$exists : false}}, {$set: {'msglog': None}})
+        await self.dbservers.update({"server_id": guild.id, 'selfrole': {$exists : false}}, {$set: {'selfrole': None}})
+
+    async def cmd_dbconfig(self, guild, message, channel_mentions, leftover_args, config = None, channelmention = None):
+        """
+        Usage:
+            {command_prefix}dbconfig [welcomechannel/ruleschannel/msglog] [channel_mention]
+        Changes the value in the database config document to the specified channel.
+        You can currently set the channel for the welcome message, the rules channel, and the channel for outputting logs.
+        """
+        if config:
+            config = config.lower()
+            if channel_mentions:
+                if config == "msglog":
+                    await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'msglog': channel_mentions[0].id}})
+                    return Response("Set channel <#{}> as Log Channel".format(channel_mentions[0].id))
+
+                else:
+                    raise exceptions.CommandError("Invalid database config value.")
+            else:
+                raise exceptions.CommandError("Specify a channel!")
+        else:
+            raise exceptions.CommandError("Specify a database config value!")
+
+    async def cmd_configselfrole(self, guild, message, author, leftover_args)
+        try:
+            leftover_args = shlex.split(' '.join(leftover_args))
+        except ValueError:
+            raise exceptions.CommandError("Please quote the roles properly", expire_in=30)
+        lcopy = leftover_args[:]
+        post = []
+        for arg in lcopy:
+            role = discord.utils.find(lambda r: r.name == arg, guild.roles)
+            if role:
+                post.append(role.name)
+            else:
+                raise exceptions.CommandError("Role {} not found! Did you spell it wrong?".format(arg))
+        await self.dbservers.update({"server_id": guild.id}, {$set: {'selfrole': post}})
+        return Response("Enabled selfrole for the following roles.", delete_after=30)
+
+    async def cmd_selfrole(self, guild, message, author, leftover_args)
+        document = await self.dbservers.find_one({"server_id": guild.id})
+        if document['selfrole']:
+            try:
+                leftover_args = shlex.split(' '.join(leftover_args))
+            except ValueError:
+                raise exceptions.CommandError("Please quote the roles properly", expire_in=30)
+            lcopy = leftover_args[:]
+            for arg in lcopy:
+                role = discord.utils.find(lambda r: r.name == arg, guild.roles)
+                if role: 
+                    if role in document['selfrole']:
+                        try:
+                            await user.add_roles(role)
+                            return Response("Added you to the following roles.", delete_after=30)
+                        except:
+                            raise exceptions.CommandError("Failed to add {} to role {}".format(author.name, role.name))
+                    else:
+                        raise exceptions.PermissionsError("You do not have permission to add this role!")
+                else:
+                    raise exceptions.CommandError("Role {} not found! Did you spell it wrong?".format(arg))
+        else:
+            raise exceptions.CommandError("Selfrole is not enabled in this server!")
+
     async def cmd_hello(self, author):
         """
         Usage:
@@ -1694,7 +1766,7 @@ class MusicBot(discord.Client):
                 try:
                     leftover_args = shlex.split(' '.join(leftover_args))
                 except ValueError:
-                    raise exceptions.CommandError("Please quote the reason properly", expire_in=30)
+                    raise exceptions.CommandError("Please quote the role properly", expire_in=30)
 
                 pattern = re.compile('<@!?\d{17,18}>')
                 for x in range(len(leftover_args) - 1):
@@ -3917,6 +3989,48 @@ class MusicBot(discord.Client):
                 raise ValueError("Auto-assign role does not exist!")
         else:
             log.warning("This guild's autorole has not been assigned, or it has never been activated.")
+
+    # Logs a deleted message, which includes User + Discriminator, User ID, channel, message contents, and attachments (if any)
+    async def on_message_delete(self, message):
+        document = await self.dbservers.find_one({"server_id": message.guild.id})
+        if document['msglog']:
+            msglog = int(document['msglog'])
+            if not message.author.id == self.user.id:
+                if re.match('^{}'.format(self.config.command_prefix), message.content) == None:
+                    recordChannel = message.guild.get_channel(msglog)
+                    await self.safe_send_message(recordChannel, "**{}#{}** (ID: {}) message has been deleted from **#{}:**".format(message.author.name, message.author.discriminator, message.author.id, message.channel.name))
+                    await self.safe_send_message(recordChannel, "**Message:** {}".format(message.content))
+                    if len(message.attachments) > 0:
+                        for entry in message.attachments:
+                            await self.safe_send_message(recordChannel, "**Attachment:** {}".format(entry.proxy_url))
+
+    # Logs bulk deleted messages (for purges)
+    async def on_bulk_message_delete(self, messages):
+        document = await self.dbservers.find_one({"server_id": messages[0].guild.id})
+        if document['msglog']:
+            msglog = int(document['msglog'])
+            for message in messages:
+                if not message.author.id == self.user.id:
+                    if re.match('^{}'.format(self.config.command_prefix), message.content) == None:
+                        recordChannel = message.guild.get_channel(msglog)
+                        await self.safe_send_message(recordChannel, "**{}#{}** (ID: {}) message has been deleted from **#{}:**".format(message.author.name, message.author.discriminator, message.author.id, message.channel.name))
+                        await self.safe_send_message(recordChannel, "**Message:** {}".format(message.content))
+                        if len(message.attachments) > 0:
+                            for entry in message.attachments:
+                                await self.safe_send_message(recordChannel, "**Attachment:** {}".format(entry.proxy_url))
+
+    # Logs an edited message, which includes User + Discriminator, User ID, channel, message contents
+    async def on_message_edit(self, before, after):
+        document = await self.dbservers.find_one({"server_id": message.guild.id})
+        if document['msglog']:
+            msglog = int(document['msglog'])
+            if not before.author.id == self.user.id:
+                if not before.content == after.content:
+                    recordChannel = before.guild.get_channel(msglog)
+                    if recordChannel:
+                        await self.safe_send_message(recordChannel, "**{}#{}** (ID: {}) message has been edited in **#{}:**".format(before.author.name, before.author.discriminator, before.author.id, before.channel.name))
+                        await self.safe_send_message(recordChannel, "**Old Message:** {}".format(before.content))
+                        await self.safe_send_message(recordChannel, "**New Message:** {}".format(after.content))
 
 #############################################
 
