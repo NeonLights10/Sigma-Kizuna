@@ -1230,7 +1230,7 @@ class MusicBot(discord.Client):
                                 log.info("Inserting document")
                                 await self.dbgames.insert_one(post)
                             else:
-                                if product.get('isDiscounted') and !document['isDiscounted']:
+                                if product.get('isDiscounted') and document['isDiscounted'] == False:
                                     gogtotal += 1
                                     title = product.get('title')
                                     symbol = product.get('price').get('symbol')
