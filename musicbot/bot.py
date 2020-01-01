@@ -1239,11 +1239,11 @@ class MusicBot(discord.Client):
                                     formattedPrice = symbol + finalAmount
                                     msg += "{} *{}% Off* - {} USD\n".format(title, discountPercentage, formattedPrice)
                                     await self.dbgames.update_one({"id": int(product.get('id'))}, {"$set": {'isDiscounted': true}})
-                                else if !product.get('isDiscounted') and document['isDiscounted']:
+                                elif product.get('isDiscounted') == False and document['isDiscounted']:
                                     await self.dbgames.update_one({"id": int(product.get('id'))}, {"$set": {'isDiscounted': false}})
                     
-                    if gogtotal > 0:
-                        await self.safe_send_message(announcementsChannel, msg)
+                        if gogtotal > 0:
+                            await self.safe_send_message(announcementsChannel, msg)
 
                     except:
                         log.info("HTTP Request failed or JSON format has changed. Possible error serverside? Will try again in 5 minutes")
@@ -1299,7 +1299,7 @@ class MusicBot(discord.Client):
                                     price = product.get('price_overview').get('final_formatted')
                                     msg += "{} *{}% Off* - {} USD\n".format(title, discountPercentage, price)
                                     await self.dbgames.update_one({"id": int(product.get('id'))}, {"$set": {'discountPercentage': int(discountPercentage)}})
-                                else if product.get('price_overview').get('discount_percent') == 0 and document['discountPercentage'] > 0:
+                                elif product.get('price_overview').get('discount_percent') == 0 and document['discountPercentage'] > 0:
                                     await self.dbgames.update_one({"id": int(product.get('id'))}, {"$set": {'discountPercentage': 0}})
 
                         if steamtotal > 0:
