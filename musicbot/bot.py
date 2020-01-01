@@ -1310,8 +1310,8 @@ class MusicBot(discord.Client):
 
                 await asyncio.sleep(86400) # task runs every 24 hours
 
-        asyncio.ensure_future(background_gogCheck(), loop=self.loop)
-        asyncio.ensure_future(background_steamCheck(), Loop=self.loop)
+        asyncio.ensure_future(background_gogCheck(self), loop=self.loop)
+        asyncio.ensure_future(background_steamCheck(self), Loop=self.loop)
 
 ####################################################################################################################### utility methods
 
