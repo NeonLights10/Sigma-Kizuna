@@ -1310,8 +1310,13 @@ class MusicBot(discord.Client):
 
                 await asyncio.sleep(86400) # task runs every 24 hours
 
-        asyncio.ensure_future(background_gogCheck(self), loop=self.loop)
-        asyncio.ensure_future(background_steamCheck(self), Loop=self.loop)
+        document = await self.dbservers.find_one({"server_id": 201960084568276992})
+        
+        try:
+            if document['announcementchannel']:
+                asyncio.ensure_future(background_gogCheck(self), loop=self.loop)
+                asyncio.ensure_future(background_steamCheck(self), loop=self.loop)
+        except: pass
 
 ####################################################################################################################### utility methods
 
