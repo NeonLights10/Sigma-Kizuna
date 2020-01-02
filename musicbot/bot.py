@@ -1195,6 +1195,15 @@ class MusicBot(discord.Client):
 
         # t-t-th-th-that's all folks!
 
+        async def http_request(self, url, criteria):
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url + "{}".format(criteria)) as resp:
+                    if resp.status == 200:
+                        rjson = await resp.json()
+                        return rjson
+                    else:
+                        raise exceptions.CommandError("The API returned a status code of {}. This might mean that the service is unavailable at this time. Try again later?".format(resp.status))
+
 ####################################################################################################################### background tasks
 
         async def background_gogCheck(self):
@@ -1319,15 +1328,6 @@ class MusicBot(discord.Client):
         except: pass
 
 ####################################################################################################################### utility methods
-
-    async def http_request(self, url, criteria):
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url + "{}".format(criteria)) as resp:
-                if resp.status == 200:
-                    rjson = await resp.json()
-                    return rjson
-                else:
-                    raise exceptions.CommandError("The API returned a status code of {}. This might mean that the service is unavailable at this time. Try again later?".format(resp.status))
 
     def _gen_embed(self):
         """Provides a basic template for embeds"""
