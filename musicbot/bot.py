@@ -1215,35 +1215,35 @@ class MusicBot(discord.Client):
                     gogtotal = 0
 
                     #try:
-                        gogResults = http_request(gogURL, "?devpub=alice_in_dissonance&mediaType=game").get('products')
-                        time = 86400
+                    gogResults = http_request(gogURL, "?devpub=alice_in_dissonance&mediaType=game").get('products')
+                    time = 86400
 
-                        #for gog we can just iterate through the json array returned and check each object property "isDiscounted" for a true or not. here, we need to grab "symbol" and append it to "finalAmount" from the array "price".
-                        for product in gogResults:
-                            document = await self.dbservers.find_one(product.get('id'))
+                    #for gog we can just iterate through the json array returned and check each object property "isDiscounted" for a true or not. here, we need to grab "symbol" and append it to "finalAmount" from the array "price".
+                    for product in gogResults:
+                        document = await self.dbservers.find_one(product.get('id'))
 
-                            if document == None:
-                                post = {
-                                    'id': int(product.get('id')),
-                                    'isDiscounted': product.get('isDiscounted')
-                                }
-                                log.info("Inserting document")
-                                await self.dbgames.insert_one(post)
-                            else:
-                                if product.get('isDiscounted') and document['isDiscounted'] == False:
-                                    gogtotal += 1
-                                    title = product.get('title')
-                                    symbol = product.get('price').get('symbol')
-                                    discountPercentage = product.get('price').get('discountPercentage')
-                                    price = product.get('price').get('finalAmount')
-                                    formattedPrice = symbol + finalAmount
-                                    msg += "{} *{}% Off* - {} USD\n".format(title, discountPercentage, formattedPrice)
-                                    await self.dbgames.update_one({"id": int(product.get('id'))}, {"$set": {'isDiscounted': true}})
-                                elif product.get('isDiscounted') == False and document['isDiscounted']:
-                                    await self.dbgames.update_one({"id": int(product.get('id'))}, {"$set": {'isDiscounted': false}})
-                    
-                        if gogtotal > 0:
-                            await self.safe_send_message(announcementsChannel, msg)
+                        if document == None:
+                            post = {
+                                'id': int(product.get('id')),
+                                'isDiscounted': product.get('isDiscounted')
+                            }
+                            log.info("Inserting document")
+                            await self.dbgames.insert_one(post)
+                        else:
+                            if product.get('isDiscounted') and document['isDiscounted'] == False:
+                                gogtotal += 1
+                                title = product.get('title')
+                                symbol = product.get('price').get('symbol')
+                                discountPercentage = product.get('price').get('discountPercentage')
+                                price = product.get('price').get('finalAmount')
+                                formattedPrice = symbol + finalAmount
+                                msg += "{} *{}% Off* - {} USD\n".format(title, discountPercentage, formattedPrice)
+                                await self.dbgames.update_one({"id": int(product.get('id'))}, {"$set": {'isDiscounted': true}})
+                            elif product.get('isDiscounted') == False and document['isDiscounted']:
+                                await self.dbgames.update_one({"id": int(product.get('id'))}, {"$set": {'isDiscounted': false}})
+                
+                    if gogtotal > 0:
+                        await self.safe_send_message(announcementsChannel, msg)
 
                     #except:
                         #log.info("HTTP Request failed or JSON format has changed. Possible error serverside? Will try again in 5 minutes")
@@ -1271,39 +1271,39 @@ class MusicBot(discord.Client):
                     steamResults = []
                     #Lookie lookie! steam puts all of their json inside a wrapper with the appid as the name. Completely unnecessary
                     #try:
-                        steamResults.append(http_request(steamURL, "?appids=286260&cc=us&l=en").get('286260').get('data'))
-                        steamResults.append(http_request(steamURL, "?appids=408360&cc=us&l=en").get('408360').get('data'))
-                        steamResults.append(http_request(steamURL, "?appids=441270&cc=us&l=en").get('441270').get('data'))
-                        steamResults.append(http_request(steamURL, "?appids=344770&cc=us&l=en").get('344770').get('data'))
-                        steamResults.append(http_request(steamURL, "?appids=753220&cc=us&l=en").get('753220').get('data'))
-                        steamResults.append(http_request(steamURL, "?appids=805970&cc=us&l=en").get('805970').get('data'))
+                    steamResults.append(http_request(steamURL, "?appids=286260&cc=us&l=en").get('286260').get('data'))
+                    steamResults.append(http_request(steamURL, "?appids=408360&cc=us&l=en").get('408360').get('data'))
+                    steamResults.append(http_request(steamURL, "?appids=441270&cc=us&l=en").get('441270').get('data'))
+                    steamResults.append(http_request(steamURL, "?appids=344770&cc=us&l=en").get('344770').get('data'))
+                    steamResults.append(http_request(steamURL, "?appids=753220&cc=us&l=en").get('753220').get('data'))
+                    steamResults.append(http_request(steamURL, "?appids=805970&cc=us&l=en").get('805970').get('data'))
 
-                        time = 86400
-                        
-                        #for steam, steam is dumb. real dumb. we have to grab each game separately, then check if discount_percent > 0. if so, we can fortunately grab the "final_formatted" field.
-                        for product in steamResults:
-                            document = await self.dbgames.find_one(product.get('id'))
+                    time = 86400
+                    
+                    #for steam, steam is dumb. real dumb. we have to grab each game separately, then check if discount_percent > 0. if so, we can fortunately grab the "final_formatted" field.
+                    for product in steamResults:
+                        document = await self.dbgames.find_one(product.get('id'))
 
-                            if document == None:
-                                post = {
-                                    'id': int(product.get('steam_appid')),
-                                    'discountPercentage': product.get('price_overview').get('discount_percent')
-                                }
-                                log.info("Inserting document")
-                                await self.dbgames.insert_one(post)
-                            else:
-                                if product.get('price_overview').get('discount_percent') > 0 and document['discountPercentage'] == 0:
-                                    steamtotal += 1
-                                    title = product.get('name')
-                                    discountPercentage = product.get('price_overview').get('discount_percent')
-                                    price = product.get('price_overview').get('final_formatted')
-                                    msg += "{} *{}% Off* - {} USD\n".format(title, discountPercentage, price)
-                                    await self.dbgames.update_one({"id": int(product.get('id'))}, {"$set": {'discountPercentage': int(discountPercentage)}})
-                                elif product.get('price_overview').get('discount_percent') == 0 and document['discountPercentage'] > 0:
-                                    await self.dbgames.update_one({"id": int(product.get('id'))}, {"$set": {'discountPercentage': 0}})
+                        if document == None:
+                            post = {
+                                'id': int(product.get('steam_appid')),
+                                'discountPercentage': product.get('price_overview').get('discount_percent')
+                            }
+                            log.info("Inserting document")
+                            await self.dbgames.insert_one(post)
+                        else:
+                            if product.get('price_overview').get('discount_percent') > 0 and document['discountPercentage'] == 0:
+                                steamtotal += 1
+                                title = product.get('name')
+                                discountPercentage = product.get('price_overview').get('discount_percent')
+                                price = product.get('price_overview').get('final_formatted')
+                                msg += "{} *{}% Off* - {} USD\n".format(title, discountPercentage, price)
+                                await self.dbgames.update_one({"id": int(product.get('id'))}, {"$set": {'discountPercentage': int(discountPercentage)}})
+                            elif product.get('price_overview').get('discount_percent') == 0 and document['discountPercentage'] > 0:
+                                await self.dbgames.update_one({"id": int(product.get('id'))}, {"$set": {'discountPercentage': 0}})
 
-                        if steamtotal > 0:
-                            await self.safe_send_message(announcementsChannel, msg)
+                    if steamtotal > 0:
+                        await self.safe_send_message(announcementsChannel, msg)
                     #except:
                         #log.info("HTTP Request failed or JSON format has changed. Possible error serverside? Will try again in 5 minutes")
                         #time = 300
