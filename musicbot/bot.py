@@ -1214,7 +1214,7 @@ class MusicBot(discord.Client):
 
                     gogtotal = 0
 
-                    try:
+                    #try:
                         gogResults = http_request(gogURL, "?devpub=alice_in_dissonance&mediaType=game").get('products')
                         time = 86400
 
@@ -1245,9 +1245,9 @@ class MusicBot(discord.Client):
                         if gogtotal > 0:
                             await self.safe_send_message(announcementsChannel, msg)
 
-                    except:
-                        log.info("HTTP Request failed or JSON format has changed. Possible error serverside? Will try again in 5 minutes")
-                        time = 300
+                    #except:
+                        #log.info("HTTP Request failed or JSON format has changed. Possible error serverside? Will try again in 5 minutes")
+                        #time = 300
 
                 await asyncio.sleep(time) # task runs every 24 hours
 
@@ -1270,7 +1270,7 @@ class MusicBot(discord.Client):
 
                     steamResults = []
                     #Lookie lookie! steam puts all of their json inside a wrapper with the appid as the name. Completely unnecessary
-                    try:
+                    #try:
                         steamResults.append(http_request(steamURL, "?appids=286260&cc=us&l=en").get('286260').get('data'))
                         steamResults.append(http_request(steamURL, "?appids=408360&cc=us&l=en").get('408360').get('data'))
                         steamResults.append(http_request(steamURL, "?appids=441270&cc=us&l=en").get('441270').get('data'))
@@ -1304,11 +1304,11 @@ class MusicBot(discord.Client):
 
                         if steamtotal > 0:
                             await self.safe_send_message(announcementsChannel, msg)
-                    except:
-                        log.info("HTTP Request failed or JSON format has changed. Possible error serverside? Will try again in 5 minutes")
-                        time = 300
+                    #except:
+                        #log.info("HTTP Request failed or JSON format has changed. Possible error serverside? Will try again in 5 minutes")
+                        #time = 300
 
-                await asyncio.sleep(86400) # task runs every 24 hours
+                await asyncio.sleep(time) # task runs every 24 hours
 
         document = await self.dbservers.find_one({"server_id": 201960084568276992})
         
