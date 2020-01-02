@@ -1195,7 +1195,7 @@ class MusicBot(discord.Client):
 
         # t-t-th-th-that's all folks!
 
-        async def http_request(self, url, criteria):
+        async def http_request(url, criteria):
             async with aiohttp.ClientSession() as session:
                 async with session.get(url + "{}".format(criteria)) as resp:
                     if resp.status == 200:
