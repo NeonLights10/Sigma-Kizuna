@@ -1281,18 +1281,18 @@ class MusicBot(discord.Client):
                     steamResults = []
                     #Lookie lookie! steam puts all of their json inside a wrapper with the appid as the name. Completely unnecessary
                     #try:
-                    results = await http_request(steamURL, "?appids=286260&cc=us&l=en").get('286260')
-                    steamResults.append(results.get('data'))
-                    results = await http_request(steamURL, "?appids=408360&cc=us&l=en").get('408360')
-                    steamResults.append(results.get('data'))
-                    results = await http_request(steamURL, "?appids=441270&cc=us&l=en").get('441270')
-                    steamResults.append(results.get('data'))
-                    results = await http_request(steamURL, "?appids=344770&cc=us&l=en").get('344770')
-                    steamResults.append(results.get('data'))
-                    results = await http_request(steamURL, "?appids=753220&cc=us&l=en").get('753220')
-                    steamResults.append(results.get('data'))
-                    results = await http_request(steamURL, "?appids=805970&cc=us&l=en").get('805970')
-                    steamResults.append(results.get('data'))
+                    results = await http_request(steamURL, "?appids=286260&cc=us&l=en")
+                    steamResults.append(results.get('286260').get('data'))
+                    results = await http_request(steamURL, "?appids=408360&cc=us&l=en")
+                    steamResults.append(results.get('408360').get('data'))
+                    results = await http_request(steamURL, "?appids=441270&cc=us&l=en")
+                    steamResults.append(results.get('441270').get('data'))
+                    results = await http_request(steamURL, "?appids=344770&cc=us&l=en")
+                    steamResults.append(results.get('344770').get('data'))
+                    results = await http_request(steamURL, "?appids=753220&cc=us&l=en")
+                    steamResults.append(results.get('753220').get('data'))
+                    results = await http_request(steamURL, "?appids=805970&cc=us&l=en")
+                    steamResults.append(results.get('805970').get('data'))
 
                     time = 86400
                     
