@@ -1298,7 +1298,7 @@ class MusicBot(discord.Client):
                     
                     #for steam, steam is dumb. real dumb. we have to grab each game separately, then check if discount_percent > 0. if so, we can fortunately grab the "final_formatted" field.
                     for product in steamResults:
-                        document = await self.dbgames.find_one(product.get('id'))
+                        document = await self.dbgames.find_one(product.get('steam_appid'))
 
                         if document == None:
                             post = {
@@ -1362,7 +1362,6 @@ class MusicBot(discord.Client):
         await self.dbservers.update_one({"server_id": guild.id, 'announcementchannel': {"$exists": false}}, {"$set": {'announcementchannel': None}})
         await self.dbservers.update_one({"server_id": guild.id, 'msglog': {"$exists": false}}, {"$set": {'msglog': None}})
         await self.dbservers.update_one({"server_id": guild.id, 'invitelog': {"$exists": false}}, {"$set": {'invitelog': 'n'}})
-        await self.dbservers.update_one({"server_id": guild.id, 'welcomemsg': {"$exists": false}}, {"$set": {'welcomemsg': None}})
 
     async def cmd_dbconfig(self, guild, message, channel_mentions, leftover_args, config = None, channelmention = None):
         """
@@ -1393,7 +1392,6 @@ class MusicBot(discord.Client):
                 else:
                     raise exceptions.CommandError("Invalid database config value.")
             else:
-                raise exceptions.CommandError("Specify a channel!")
                 if config == "invitelog":
                     document = await self.dbservers.find_one({"server_id": guild.id})
                     if document['invitelog'] == "y":
