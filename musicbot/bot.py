@@ -1224,7 +1224,7 @@ class MusicBot(discord.Client):
                     gogtotal = 0
 
                     #try:
-                    gogResults = http_request(gogURL, "?devpub=alice_in_dissonance&mediaType=game").get('products')
+                    gogResults = await http_request(gogURL, "?devpub=alice_in_dissonance&mediaType=game").get('products')
                     time = 86400
 
                     #for gog we can just iterate through the json array returned and check each object property "isDiscounted" for a true or not. here, we need to grab "symbol" and append it to "finalAmount" from the array "price".
@@ -1280,12 +1280,12 @@ class MusicBot(discord.Client):
                     steamResults = []
                     #Lookie lookie! steam puts all of their json inside a wrapper with the appid as the name. Completely unnecessary
                     #try:
-                    steamResults.append(http_request(steamURL, "?appids=286260&cc=us&l=en").get('286260').get('data'))
-                    steamResults.append(http_request(steamURL, "?appids=408360&cc=us&l=en").get('408360').get('data'))
-                    steamResults.append(http_request(steamURL, "?appids=441270&cc=us&l=en").get('441270').get('data'))
-                    steamResults.append(http_request(steamURL, "?appids=344770&cc=us&l=en").get('344770').get('data'))
-                    steamResults.append(http_request(steamURL, "?appids=753220&cc=us&l=en").get('753220').get('data'))
-                    steamResults.append(http_request(steamURL, "?appids=805970&cc=us&l=en").get('805970').get('data'))
+                    steamResults.append(await http_request(steamURL, "?appids=286260&cc=us&l=en").get('286260').get('data'))
+                    steamResults.append(await http_request(steamURL, "?appids=408360&cc=us&l=en").get('408360').get('data'))
+                    steamResults.append(await http_request(steamURL, "?appids=441270&cc=us&l=en").get('441270').get('data'))
+                    steamResults.append(await http_request(steamURL, "?appids=344770&cc=us&l=en").get('344770').get('data'))
+                    steamResults.append(await http_request(steamURL, "?appids=753220&cc=us&l=en").get('753220').get('data'))
+                    steamResults.append(await http_request(steamURL, "?appids=805970&cc=us&l=en").get('805970').get('data'))
 
                     time = 86400
                     
