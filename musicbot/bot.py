@@ -4049,7 +4049,9 @@ class MusicBot(discord.Client):
         document = await self.dbservers.find_one({"server_id": member.guild.id})
         if document['welcomechannel']:
             welcomechannel = int(document['welcomechannel'])
-            await self.safe_send_message(member.guild.get_channel(welcomechannel), "Farewell {}! (ID: {})".format(member.name, member.id))
+            name = member.name
+            strip_name = re.sub('discord\.gg', '[removed]', name)
+            await self.safe_send_message(member.guild.get_channel(welcomechannel), "Farewell {}! (ID: {})".format(strip_name, member.id))
 
     # Logs a deleted message, which includes User + Discriminator, User ID, channel, message contents, and attachments (if any)
     async def on_message_delete(self, message):
