@@ -4050,7 +4050,7 @@ class MusicBot(discord.Client):
         if document['welcomechannel']:
             welcomechannel = int(document['welcomechannel'])
             name = member.name
-            strip_name = re.sub('discord\.gg', '[removed]', name)
+            strip_name = re.sub('discord\.gg\/\w{7,}', '[removed]', name)
             await self.safe_send_message(member.guild.get_channel(welcomechannel), "Farewell {}! (ID: {})".format(strip_name, member.id))
 
     # Logs a deleted message, which includes User + Discriminator, User ID, channel, message contents, and attachments (if any)
