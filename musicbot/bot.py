@@ -1206,7 +1206,7 @@ class MusicBot(discord.Client):
 
 ####################################################################################################################### background tasks
 
-        async def background_gogCheck(self):
+        '''async def background_gogCheck(self):
             log.debug("ensure_future for background task complete")
             while not self.is_closed():
                 #This needs to be hardcoded, but that's ok because it's specific to AiD server only
@@ -1332,7 +1332,7 @@ class MusicBot(discord.Client):
             if document['announcementchannel']:
                 asyncio.ensure_future(background_gogCheck(self), loop=self.loop)
                 asyncio.ensure_future(background_steamCheck(self), loop=self.loop)
-        except: pass
+        except: pass'''
 
 ####################################################################################################################### utility methods
 
@@ -1362,6 +1362,7 @@ class MusicBot(discord.Client):
         await self.dbservers.update_one({"server_id": guild.id, 'announcementchannel': {"$exists": false}}, {"$set": {'announcementchannel': None}})
         await self.dbservers.update_one({"server_id": guild.id, 'msglog': {"$exists": false}}, {"$set": {'msglog': None}})
         await self.dbservers.update_one({"server_id": guild.id, 'invitelog': {"$exists": false}}, {"$set": {'invitelog': 'n'}})
+        await self.dbservers.update_one({"server_id": guild.id, 'selfrole': {"$exists": false}}, {"$set": {'selfrole': None}})
 
     async def cmd_dbconfig(self, guild, message, channel_mentions, leftover_args, config = None, channelmention = None):
         """
@@ -1405,6 +1406,46 @@ class MusicBot(discord.Client):
                     raise exceptions.CommandError("Specify a channel!")
         else:
             raise exceptions.CommandError("Specify a database config value!")
+
+    async def cmd_configselfrole(self, guild, message, author, leftover_args)
+        try:
+            leftover_args = shlex.split(' '.join(leftover_args))
+        except ValueError:
+            raise exceptions.CommandError("Please quote the roles properly", expire_in=30)
+        lcopy = leftover_args[:]
+        post = []
+        for arg in lcopy:
+            role = discord.utils.find(lambda r: r.name == arg, guild.roles)
+            if role:
+                post.append(role.name)
+            else:
+                raise exceptions.CommandError("Role {} not found! Did you spell it wrong?".format(arg))
+        await self.dbservers.update({"server_id": guild.id}, {$set: {'selfrole': post}})
+        return Response("Enabled selfrole for the following roles.", delete_after=30)
+
+    async def cmd_selfrole(self, guild, message, author, leftover_args)
+        document = await self.dbservers.find_one({"server_id": guild.id})
+        if document['selfrole']:
+            try:
+                leftover_args = shlex.split(' '.join(leftover_args))
+            except ValueError:
+                raise exceptions.CommandError("Please quote the roles properly", expire_in=30)
+            lcopy = leftover_args[:]
+            for arg in lcopy:
+                role = discord.utils.find(lambda r: r.name == arg, guild.roles)
+                if role: 
+                    if role in document['selfrole']:
+                        try:
+                            await user.add_roles(role)
+                            return Response("Added you to the following roles.", delete_after=30)
+                        except:
+                            raise exceptions.CommandError("Failed to add {} to role {}".format(author.name, role.name))
+                    else:
+                        raise exceptions.PermissionsError("You do not have permission to add this role!")
+                else:
+                    raise exceptions.CommandError("Role {} not found! Did you spell it wrong?".format(arg))
+        else:
+            raise exceptions.CommandError("Selfrole is not enabled in this server!")
 
     async def cmd_aar(self, guild, leftover_args):
         """
