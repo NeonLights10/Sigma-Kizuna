@@ -1225,6 +1225,10 @@ class MusicBot(discord.Client):
                     await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'msglog': channel_mentions[0].id}})
                     return Response("Set channel <#{}> as Log Channel".format(channel_mentions[0].id))
 
+                elif config == "output":
+                    document = await self.dbservers.find_one({"server_id": guild.id})
+                    return Response(str(document))
+
                 else:
                     raise exceptions.CommandError("Invalid database config value.")
             else:
