@@ -4051,9 +4051,22 @@ class MusicBot(discord.Client):
             welcomechannel = int(document['welcomechannel'])
             if document['ruleschannel']:
                 ruleschannel = int(document['ruleschannel'])
-                await self.safe_send_message(member.guild.get_channel(welcomechannel), "Istariana vilseriol <@{}>! Welcome to the {} Discord server. Please read our <#{}>, thank you.".format(member.id, member.guild.name, ruleschannel))
+                #TODO: replace with a embed
+                content = discord.Embed(colour=0x1abc9c, title="Istariana vilseriol <@{}>!".format(member.id), description="Welcome to the {} Discord server. Please read our <#{}>, thank you.".format(member.guild.name, ruleschannel))
+                content.set_author(name="RuRune", icon_url=self.user.avatar_url)
+                content.set_footer(text="ALICE IN DISSONANCE | {}".format(ctime()))
+                content.set_thumbnail(url="https://files.s-neon.xyz/share/big-icon-512.png")
+                content.set_image(url="https://files.s-neon.xyz/share/welcomebanner.png")
+                await self.safe_send_message(member.guild.get_channel(welcomechannel), content)
+                #await self.safe_send_message(member.guild.get_channel(welcomechannel), "Istariana vilseriol <@{}>! Welcome to the {} Discord server. Please read our <#{}>, thank you.".format(member.id, member.guild.name, ruleschannel))
             else:
-                await self.safe_send_message(member.guild.get_channel(welcomechannel), "Istariana vilseriol <@{}>! Welcome to the {} Discord server.".format(member.id, member.guild.name))
+                content = discord.Embed(colour=0x1abc9c, title="Istariana vilseriol <@{}>!".format(member.id), description="Welcome to the {} Discord server.".format(member.guild.name))
+                content.set_author(name="RuRune", icon_url=self.user.avatar_url)
+                content.set_footer(text="ALICE IN DISSONANCE | {}".format(ctime()))
+                content.set_thumbnail(url="https://files.s-neon.xyz/share/big-icon-512.png")
+                content.set_image(url="https://files.s-neon.xyz/share/welcomebanner.png")
+                await self.safe_send_message(member.guild.get_channel(welcomechannel), content)
+                #await self.safe_send_message(member.guild.get_channel(welcomechannel), "Istariana vilseriol <@{}>! Welcome to the {} Discord server.".format(member.id, member.guild.name))
         
         if (document['invitelog'] == "y") and document['msglog']:
             log.info("Invite logging is enabled.")
