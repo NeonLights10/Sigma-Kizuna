@@ -1393,7 +1393,7 @@ class MusicBot(discord.Client):
 
                 elif config == "output":
                     document = await self.dbservers.find_one({"server_id": guild.id})
-                    return Response(document)
+                    return Response(str(document))
 
                 else:
                     raise exceptions.CommandError("Invalid database config value.")
@@ -4058,7 +4058,7 @@ class MusicBot(discord.Client):
             if document['ruleschannel']:
                 ruleschannel = int(document['ruleschannel'])
                 #TODO: replace with a embed
-                content = discord.Embed(colour=0x1abc9c, title="Istariana vilseriol!", description="Welcome @{} to the {} Discord server. Please read our <#{}>, thank you.".format(member.name, member.guild.name, ruleschannel))
+                content = discord.Embed(colour=0x1abc9c, title="Istariana vilseriol!", description="Welcome <@{}> to the {} Discord server. Please read our <#{}>, thank you.".format(member.id, member.guild.name, ruleschannel))
                 content.set_author(name="RuRune", icon_url=self.user.avatar_url)
                 content.set_footer(text="ALICE IN DISSONANCE | {}".format(time.ctime()))
                 content.set_thumbnail(url="https://files.s-neon.xyz/share/big-icon-512.png")
@@ -4066,7 +4066,7 @@ class MusicBot(discord.Client):
                 await self.safe_send_message(member.guild.get_channel(welcomechannel), content)
                 #await self.safe_send_message(member.guild.get_channel(welcomechannel), "Istariana vilseriol <@{}>! Welcome to the {} Discord server. Please read our <#{}>, thank you.".format(member.id, member.guild.name, ruleschannel))
             else:
-                content = discord.Embed(colour=0x1abc9c, title="Istariana vilseriol!", description="Welcome <@{}> to the {} Discord server.".format(member.name, member.guild.name))
+                content = discord.Embed(colour=0x1abc9c, title="Istariana vilseriol!", description="Welcome <@{}> to the {} Discord server.".format(member.id, member.guild.name))
                 content.set_author(name="RuRune", icon_url=self.user.avatar_url)
                 content.set_footer(text="ALICE IN DISSONANCE | {}".format(time.ctime()))
                 content.set_thumbnail(url="https://files.s-neon.xyz/share/big-icon-512.png")
