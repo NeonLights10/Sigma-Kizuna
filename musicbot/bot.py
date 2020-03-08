@@ -1371,6 +1371,7 @@ class MusicBot(discord.Client):
         Changes the value in the database config document to the specified channel.
         You can currently set the channel for the welcome message, the rules channel, and the channel for outputting logs.
         """
+        #TODO: add keyword to return the document contents
         if config:
             config = config.lower()
             if channel_mentions:
@@ -1389,6 +1390,10 @@ class MusicBot(discord.Client):
                 elif config == "announcementchannel":
                     await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'announcementchannel': channel_mentions[0].id}})
                     return Response("Set channel <#{}> as Announcement Channel".format(channel_mentions[0].id))
+
+                elif config == "output":
+                    document = await self.dbservers.find_one({"server_id": guild.id})
+                    return Response(document)
 
                 else:
                     raise exceptions.CommandError("Invalid database config value.")
@@ -1417,6 +1422,7 @@ class MusicBot(discord.Client):
         for arg in lcopy:
             role = discord.utils.find(lambda r: r.name == arg, guild.roles)
             if role:
+                log.info("self role found, appending")
                 post.append(role.name)
             else:
                 raise exceptions.CommandError("Role {} not found! Did you spell it wrong?".format(arg))
@@ -4053,7 +4059,7 @@ class MusicBot(discord.Client):
             if document['ruleschannel']:
                 ruleschannel = int(document['ruleschannel'])
                 #TODO: replace with a embed
-                content = discord.Embed(colour=0x1abc9c, title="Istariana vilseriol <@{}>!".format(member.id), description="Welcome to the {} Discord server. Please read our <#{}>, thank you.".format(member.guild.name, ruleschannel))
+                content = discord.Embed(colour=0x1abc9c, title="Istariana vilseriol!", description="Welcome <@{}> to the {} Discord server. Please read our <#{}>, thank you.".format(member.id, member.guild.name, ruleschannel))
                 content.set_author(name="RuRune", icon_url=self.user.avatar_url)
                 content.set_footer(text="ALICE IN DISSONANCE | {}".format(date.ctime()))
                 content.set_thumbnail(url="https://files.s-neon.xyz/share/big-icon-512.png")
@@ -4061,7 +4067,7 @@ class MusicBot(discord.Client):
                 await self.safe_send_message(member.guild.get_channel(welcomechannel), content)
                 #await self.safe_send_message(member.guild.get_channel(welcomechannel), "Istariana vilseriol <@{}>! Welcome to the {} Discord server. Please read our <#{}>, thank you.".format(member.id, member.guild.name, ruleschannel))
             else:
-                content = discord.Embed(colour=0x1abc9c, title="Istariana vilseriol <@{}>!".format(member.id), description="Welcome to the {} Discord server.".format(member.guild.name))
+                content = discord.Embed(colour=0x1abc9c, title="Istariana vilseriol!", description="Welcome <@{}> to the {} Discord server.".format(member.id, member.guild.name))
                 content.set_author(name="RuRune", icon_url=self.user.avatar_url)
                 content.set_footer(text="ALICE IN DISSONANCE | {}".format(date.ctime()))
                 content.set_thumbnail(url="https://files.s-neon.xyz/share/big-icon-512.png")
