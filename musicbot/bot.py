@@ -4125,10 +4125,8 @@ class MusicBot(discord.Client):
                             log.info("stored value: " + rrlist[rolename])
                             if str(payload.emoji) == rrlist[rolename]:
                                 log.info("payload emoji match")
-                                member = self.get_user(payload.user_id)
                                 guild = self.get_guild(payload.guild_id)
-                                log.info("payload: " + str(payload.user_id))
-                                log.info("found member: " + str(member.id))
+                                member = guild.get_member(payload.user_id)
                                 role = discord.utils.find(lambda r: r.name == rolename, guild.roles)
                                 if role:
                                     log.info("role found") 
@@ -4136,7 +4134,7 @@ class MusicBot(discord.Client):
                                         await member.remove_roles(role)
                                         return
                                     except:
-                                        raise exceptions.CommandError("Failed to add {} to role {}".format(payload.member.name, role.name))
+                                        raise exceptions.CommandError("Failed to add {} to role {}".format(member.name, role.name))
 
 #############################################
 
