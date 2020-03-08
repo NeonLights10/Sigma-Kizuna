@@ -4103,7 +4103,7 @@ class MusicBot(discord.Client):
                             log.info("stored value: " + rrlist[rolename])
                             if str(payload.emoji) == rrlist[rolename]:
                                 log.info("payload emoji match")
-                                role = discord.utils.find(lambda r: r.name == rolename, guild.roles)
+                                role = discord.utils.find(lambda r: r.name == rolename, member.guild.roles)
                                 if role:
                                     log.info("role found") 
                                     try:
