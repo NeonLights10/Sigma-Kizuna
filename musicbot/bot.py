@@ -1420,7 +1420,7 @@ class MusicBot(discord.Client):
                 post.append(role.name)
             else:
                 raise exceptions.CommandError("Role {} not found! Did you spell it wrong?".format(arg))
-        await self.dbservers.update({"server_id": guild.id}, {"$set": {'selfrole': post}})
+        await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'selfrole': post}})
         return Response("Enabled selfrole for the following roles.", delete_after=30)
 
     async def cmd_selfrole(self, guild, message, author, leftover_args):
@@ -4049,12 +4049,13 @@ class MusicBot(discord.Client):
                 raise ValueError("Auto-assign role does not exist!")
         if document['welcomechannel']:
             welcomechannel = int(document['welcomechannel'])
+            date = datetime.date.fromtimestamp(time.time())
             if document['ruleschannel']:
                 ruleschannel = int(document['ruleschannel'])
                 #TODO: replace with a embed
                 content = discord.Embed(colour=0x1abc9c, title="Istariana vilseriol <@{}>!".format(member.id), description="Welcome to the {} Discord server. Please read our <#{}>, thank you.".format(member.guild.name, ruleschannel))
                 content.set_author(name="RuRune", icon_url=self.user.avatar_url)
-                content.set_footer(text="ALICE IN DISSONANCE | {}".format(ctime()))
+                content.set_footer(text="ALICE IN DISSONANCE | {}".format(date.ctime()))
                 content.set_thumbnail(url="https://files.s-neon.xyz/share/big-icon-512.png")
                 content.set_image(url="https://files.s-neon.xyz/share/welcomebanner.png")
                 await self.safe_send_message(member.guild.get_channel(welcomechannel), content)
@@ -4062,7 +4063,7 @@ class MusicBot(discord.Client):
             else:
                 content = discord.Embed(colour=0x1abc9c, title="Istariana vilseriol <@{}>!".format(member.id), description="Welcome to the {} Discord server.".format(member.guild.name))
                 content.set_author(name="RuRune", icon_url=self.user.avatar_url)
-                content.set_footer(text="ALICE IN DISSONANCE | {}".format(ctime()))
+                content.set_footer(text="ALICE IN DISSONANCE | {}".format(date.ctime()))
                 content.set_thumbnail(url="https://files.s-neon.xyz/share/big-icon-512.png")
                 content.set_image(url="https://files.s-neon.xyz/share/welcomebanner.png")
                 await self.safe_send_message(member.guild.get_channel(welcomechannel), content)
