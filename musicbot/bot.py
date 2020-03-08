@@ -4093,7 +4093,7 @@ class MusicBot(discord.Client):
                 log.info("Found dictionary of available roles")
                 selfrolemsg = document['selfrolemsg']
                 for msg in selfrolemsg:
-                    log.info("Checking payload id against msg id " + msg)
+                    log.info("Checking payload id against msg id " + str(msg))
                     if payload.message_id == int(msg):
                         log.info("payload id match")
                         rrlist = document['selfrole']
