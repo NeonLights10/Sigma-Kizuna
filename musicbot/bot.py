@@ -4099,7 +4099,7 @@ class MusicBot(discord.Client):
                         rrlist = document['selfrole']
                         for rolename in rrlist:
                             log.info("Checking payload emoji against list of emoji")
-                            log.info("payload: " + str(payload.emoji)
+                            log.info("payload: " + str(payload.emoji))
                             log.info("stored value: " + rrlist[rolename])
                             if str(payload.emoji) == rrlist[rolename]:
                                 log.info("payload emoji match")
