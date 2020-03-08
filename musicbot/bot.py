@@ -4102,7 +4102,7 @@ class MusicBot(discord.Client):
                                             await payload.member.add_roles(role)
                                         except:
                                             raise exceptions.CommandError("Failed to add {} to role {}".format(payload.member.name, role.name))
-        except: pass
+        #except: pass
 
 #############################################
 
