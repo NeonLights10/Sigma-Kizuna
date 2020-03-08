@@ -1340,7 +1340,7 @@ class MusicBot(discord.Client):
         """Provides a basic template for embeds"""
         e = discord.Embed(colour=0x1abc9c)
         e.set_author(name="RuRune v{}".format(BOTVERSION), icon_url=self.user.avatar_url)
-        e.set_footer(text="Sugoi!")
+        e.set_footer(text="ALICE IN DISSONANCE")
         return e
 
 ####################################################### custom commands
