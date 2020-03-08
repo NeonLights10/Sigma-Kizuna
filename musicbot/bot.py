@@ -1253,6 +1253,12 @@ class MusicBot(discord.Client):
         return Response("Enabled selfrole for the following roles.", delete_after=30)'''
 
     async def cmd_configselfrole(self, guild, message, leftover_args):
+        """
+        Usage:
+            {command_prefix}configselfrole ["role_name, emoji"] <"role_name, emoji">
+        Configures the self role by reaction with the following roles and assigned emoji.
+        You can do multiple at the same time. You must use the emoji, no space after.
+        """
         try:
             leftover_args = shlex.split(' '.join(leftover_args))
         except ValueError:
@@ -1274,6 +1280,12 @@ class MusicBot(discord.Client):
         return Response("Enabled selfrole for the following roles.", delete_after=30)
 
     async def cmd_selfrolemsg(self, guild, channel, leftover_args):
+        """
+        Usage:
+            {command_prefix}configselfrole ["message_id"] <"message_id">
+        Configures the self role by reaction to the specified message.
+        You can do multiple at the same time.
+        """
         try:
             leftover_args = shlex.split(' '.join(leftover_args))
         except ValueError:
