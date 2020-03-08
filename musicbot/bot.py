@@ -4085,12 +4085,9 @@ class MusicBot(discord.Client):
         except: pass
 
     async def on_raw_reaction_add(self, payload):
-        log.info("Reaction added")
         document = await self.dbservers.find_one({"server_id": payload.guild_id})
         if document['selfrolemsg']:
-            log.info("Reaction self role enabled")
             if document['selfrole']:
-                log.info("Found dictionary of available roles")
                 selfrolemsg = document['selfrolemsg']
                 for msg in selfrolemsg:
                     log.info("Checking payload id against msg id " + str(msg))
@@ -4103,7 +4100,7 @@ class MusicBot(discord.Client):
                             log.info("stored value: " + rrlist[rolename])
                             if str(payload.emoji) == rrlist[rolename]:
                                 log.info("payload emoji match")
-                                role = discord.utils.find(lambda r: r.name == rolename, member.guild.roles)
+                                role = discord.utils.find(lambda r: r.name == rolename, payload.member.guild.roles)
                                 if role:
                                     log.info("role found") 
                                     try:
