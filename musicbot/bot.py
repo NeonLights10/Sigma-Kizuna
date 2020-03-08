@@ -4124,11 +4124,12 @@ class MusicBot(discord.Client):
                             log.info("stored value: " + rrlist[rolename])
                             if str(payload.emoji) == rrlist[rolename]:
                                 log.info("payload emoji match")
-                                role = discord.utils.find(lambda r: r.name == rolename, payload.member.guild.roles)
+                                member = discord.utils.find(lambda m: m.id == payload.user_id, self.get_all_members())
+                                role = discord.utils.find(lambda r: r.name == rolename, member.guild.roles)
                                 if role:
                                     log.info("role found") 
                                     try:
-                                        await payload.member.remove_roles(role)
+                                        await member.remove_roles(role)
                                     except:
                                         raise exceptions.CommandError("Failed to add {} to role {}".format(payload.member.name, role.name))
 
