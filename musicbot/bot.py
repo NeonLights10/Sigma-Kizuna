@@ -4084,7 +4084,7 @@ class MusicBot(discord.Client):
                             await self.safe_send_message(recordChannel, "**New Message:** {}".format(after.content))
         except: pass
 
-    async def on_reacion_add(self, reaction, user):
+    async def on_reaction_add(self, reaction, user):
         log.info("Reaction added")
         document = await self.dbservers.find_one({"server_id": user.guild.id})
         try:
