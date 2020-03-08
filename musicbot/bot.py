@@ -4085,6 +4085,7 @@ class MusicBot(discord.Client):
         except: pass
 
     async def on_reacion_add(self, reaction, user):
+        log.info("Reaction added")
         document = await self.dbservers.find_one({"server_id": user.guild.id})
         try:
             if document['selfrolemsg']:
