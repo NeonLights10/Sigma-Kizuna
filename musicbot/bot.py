@@ -4084,52 +4084,45 @@ class MusicBot(discord.Client):
                             await self.safe_send_message(recordChannel, "**New Message:** {}".format(after.content))
         except: pass
 
+    # Scans for reactions on messages. If found, checks if the reaction is on a specified message in order to determine if someone is assigning themselves a role.
     async def on_raw_reaction_add(self, payload):
         document = await self.dbservers.find_one({"server_id": payload.guild_id})
+        #Check if self role by reaction is enabled for message(s)
         if document['selfrolemsg']:
+            #Check if there is a dictionary of roles available to check against
             if document['selfrole']:
                 selfrolemsg = document['selfrolemsg']
                 for msg in selfrolemsg:
-                    log.info("Checking payload id against msg id " + str(msg))
+                    #If the message that had a reaction added matches, go ahead and assign the role
                     if payload.message_id == int(msg):
-                        log.info("payload id match")
                         rrlist = document['selfrole']
                         for rolename in rrlist:
-                            log.info("Checking payload emoji against list of emoji")
-                            log.info("payload: " + str(payload.emoji))
-                            log.info("stored value: " + rrlist[rolename])
+                            #If the reaction is not listed in the dictionary, ignore it.
                             if str(payload.emoji) == rrlist[rolename]:
-                                log.info("payload emoji match")
                                 role = discord.utils.find(lambda r: r.name == rolename, payload.member.guild.roles)
                                 if role:
-                                    log.info("role found") 
                                     try:
                                         await payload.member.add_roles(role)
                                         return
                                     except:
                                         raise exceptions.CommandError("Failed to add {} to role {}".format(payload.member.name, role.name))
 
+    # Inverse of the above. Removes roles when the user removes their reaction from the specified message.
     async def on_raw_reaction_remove(self, payload):
         document = await self.dbservers.find_one({"server_id": payload.guild_id})
         if document['selfrolemsg']:
             if document['selfrole']:
                 selfrolemsg = document['selfrolemsg']
                 for msg in selfrolemsg:
-                    log.info("Checking payload id against msg id " + str(msg))
                     if payload.message_id == int(msg):
-                        log.info("payload id match")
                         rrlist = document['selfrole']
                         for rolename in rrlist:
-                            log.info("Checking payload emoji against list of emoji")
-                            log.info("payload: " + str(payload.emoji))
-                            log.info("stored value: " + rrlist[rolename])
                             if str(payload.emoji) == rrlist[rolename]:
-                                log.info("payload emoji match")
+                                # raw reaction removal does not provide us with the member object, so we have to fetch the guild, then the member :(
                                 guild = self.get_guild(payload.guild_id)
                                 member = guild.get_member(payload.user_id)
                                 role = discord.utils.find(lambda r: r.name == rolename, guild.roles)
                                 if role:
-                                    log.info("role found") 
                                     try:
                                         await member.remove_roles(role)
                                         return
