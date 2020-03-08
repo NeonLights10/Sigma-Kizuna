@@ -4088,17 +4088,25 @@ class MusicBot(discord.Client):
         log.info("Reaction added")
         document = await self.dbservers.find_one({"server_id": payload.guild_id})
         if document['selfrolemsg']:
+            log.info("Reaction self role enabled")
             if document['selfrole']:
+                log.info("Found dictionary of available roles")
                 selfrolemsg = document['selfrolemsg']
                 for msg in selfrolemsg:
+                    log.info("Checking payload id against msg id " + msg)
                     if payload.message_id == int(msg):
+                        log.info("payload id match")
                         rrlist = document['selfrole']
                         for rolename in rrlist:
+                            log.info("Checking payload emoji against list of emoji")
                             if payload.emoji.name == rrlist[rolename]:
+                                log.info("payload emoji match")
                                 role = discord.utils.find(lambda r: r.name == rolename, guild.roles)
-                                if role: 
+                                if role:
+                                    log.info("role found") 
                                     try:
                                         await payload.member.add_roles(role)
+                                        await self.safe_send_message(recordChannel, "**Added role**")
                                     except:
                                         raise exceptions.CommandError("Failed to add {} to role {}".format(payload.member.name, role.name))
         #except: pass
