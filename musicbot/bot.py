@@ -1232,7 +1232,7 @@ class MusicBot(discord.Client):
         else:
             raise exceptions.CommandError("Specify a database config value!")
 
-    async def cmd_configselfrole(self, guild, message, author, leftover_args):
+    '''async def cmd_configselfrole(self, guild, message, author, leftover_args):
         try:
             leftover_args = shlex.split(' '.join(leftover_args))
         except ValueError:
@@ -1246,9 +1246,51 @@ class MusicBot(discord.Client):
             else:
                 raise exceptions.CommandError("Role {} not found! Did you spell it wrong?".format(arg))
         await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'selfrole': post}})
+        return Response("Enabled selfrole for the following roles.", delete_after=30)'''
+
+    async def cmd_configselfrole(self, guild, message, leftover_args):
+        try:
+            leftover_args = shlex.split(' '.join(leftover_args))
+        except ValueError:
+            raise exceptions.CommandError("Please quote the roles properly", expire_in=30)
+        lcopy = leftover_args[:]
+        post = {}
+        for arg in lcopy:
+            arg = arg.split(",")
+            if arg.len() == 2:
+                role = discord.utils.find(lambda r: r.name == arg[0], guild.roles)
+                if role:
+                    post[role.name] = arg[1]
+                else:
+                    raise exceptions.CommandError("Role {} not found! Did you spell it wrong?".format(arg))
+            else:
+                raise exceptions.CommandError("You specified too few or too many arguments in a quotation!", expire_in=30)
+
+            await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'selfrole': post}})
         return Response("Enabled selfrole for the following roles.", delete_after=30)
 
-    async def cmd_selfrole(self, guild, message, author, leftover_args):
+    async def cmd_selfrolemsg(self, guild, channel, leftover_args):
+        try:
+            leftover_args = shlex.split(' '.join(leftover_args))
+        except ValueError:
+            raise exceptions.CommandError("Please quote the roles properly", expire_in=30)
+        lcopy = leftover_args[:]
+        post = []
+        for arg in lcopy:
+            try:
+                msg = await channel.fetch_message(int(arg))
+                post.append(msg.id)
+
+            except discord.Forbidden:
+                raise exceptions.CommandError("I don't have permissions to read message history.")
+
+            except discord.NotFound:
+                raise exceptions.CommandError("Message not found. Check the message id?")
+
+        await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'selfrole': post}})
+        return Response("Enabled self role reaction tracking for the following messages.", delete_after=30)
+
+    '''async def cmd_selfrole(self, guild, message, author, leftover_args):
         document = await self.dbservers.find_one({"server_id": guild.id})
         if document['selfrole']:
             try:
@@ -1262,7 +1304,6 @@ class MusicBot(discord.Client):
                     if role.name in document['selfrole']:
                         try:
                             await author.add_roles(role)
-                            return Response("Added you to the following roles.", delete_after=30)
                         except:
                             raise exceptions.CommandError("Failed to add {} to role {}".format(author.name, role.name))
                     else:
@@ -1271,6 +1312,7 @@ class MusicBot(discord.Client):
                     raise exceptions.CommandError("Role {} not found! Did you spell it wrong?".format(arg))
         else:
             raise exceptions.CommandError("Selfrole is not enabled in this server!")
+        return Response("Added you to the following roles.", delete_after=30)'''
 
     async def cmd_hello(self, author):
         """
@@ -4036,6 +4078,25 @@ class MusicBot(discord.Client):
                             await self.safe_send_message(recordChannel, "**{}#{}** (ID: {}) message has been edited in **#{}:**".format(before.author.name, before.author.discriminator, before.author.id, before.channel.name))
                             await self.safe_send_message(recordChannel, "**Old Message:** {}".format(before.content))
                             await self.safe_send_message(recordChannel, "**New Message:** {}".format(after.content))
+        except: pass
+
+    async def on_reacion_add(self, reaction, user):
+        document = await self.dbservers.find_one({"server_id": user.guild.id})
+        try:
+            if document['selfrolemsg']:
+                if document['selfrole']:
+                    selfrolemsg = document['selfrolemsg']
+                    for msg in selfrolemsg:
+                        if reaction.message.id == int(msg):
+                            rrlist = document['selfrole']
+                            for rolename in rrlist:
+                                if reaction.emoji.name == rrlist[rolename]:
+                                    role = discord.utils.find(lambda r: r.name == rolename, guild.roles)
+                                    if role: 
+                                        try:
+                                            await author.add_roles(role)
+                                        except:
+                                            raise exceptions.CommandError("Failed to add {} to role {}".format(author.name, role.name))
         except: pass
 
 #############################################
