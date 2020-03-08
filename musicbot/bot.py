@@ -1440,7 +1440,7 @@ class MusicBot(discord.Client):
             for arg in lcopy:
                 role = discord.utils.find(lambda r: r.name == arg, guild.roles)
                 if role: 
-                    if role in document['selfrole']:
+                    if role.name in document['selfrole']:
                         try:
                             await user.add_roles(role)
                             return Response("Added you to the following roles.", delete_after=30)
