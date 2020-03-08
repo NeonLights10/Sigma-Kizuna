@@ -1407,7 +1407,7 @@ class MusicBot(discord.Client):
         else:
             raise exceptions.CommandError("Specify a database config value!")
 
-    async def cmd_configselfrole(self, guild, message, author, leftover_args)
+    async def cmd_configselfrole(self, guild, message, author, leftover_args):
         try:
             leftover_args = shlex.split(' '.join(leftover_args))
         except ValueError:
@@ -1420,10 +1420,10 @@ class MusicBot(discord.Client):
                 post.append(role.name)
             else:
                 raise exceptions.CommandError("Role {} not found! Did you spell it wrong?".format(arg))
-        await self.dbservers.update({"server_id": guild.id}, {$set: {'selfrole': post}})
+        await self.dbservers.update({"server_id": guild.id}, {"$set": {'selfrole': post}})
         return Response("Enabled selfrole for the following roles.", delete_after=30)
 
-    async def cmd_selfrole(self, guild, message, author, leftover_args)
+    async def cmd_selfrole(self, guild, message, author, leftover_args):
         document = await self.dbservers.find_one({"server_id": guild.id})
         if document['selfrole']:
             try:
