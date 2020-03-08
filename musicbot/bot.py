@@ -1291,7 +1291,7 @@ class MusicBot(discord.Client):
             except discord.NotFound:
                 raise exceptions.CommandError("Message not found. Check the message id?")
 
-        await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'selfrole': post}})
+        await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'selfrolemsg': post}})
         return Response("Enabled self role reaction tracking for the following messages.", delete_after=30)
 
     '''async def cmd_selfrole(self, guild, message, author, leftover_args):
