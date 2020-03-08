@@ -1443,7 +1443,6 @@ class MusicBot(discord.Client):
                     if role.name in document['selfrole']:
                         try:
                             await author.add_roles(role)
-                            return Response("Added you to the following roles.", delete_after=30)
                         except:
                             raise exceptions.CommandError("Failed to add {} to role {}".format(author.name, role.name))
                     else:
@@ -1452,6 +1451,7 @@ class MusicBot(discord.Client):
                     raise exceptions.CommandError("Role {} not found! Did you spell it wrong?".format(arg))
         else:
             raise exceptions.CommandError("Selfrole is not enabled in this server!")
+        return Response("Added you to the following roles.", delete_after=30)
 
     async def cmd_aar(self, guild, leftover_args):
         """
