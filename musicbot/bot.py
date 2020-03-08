@@ -4084,24 +4084,24 @@ class MusicBot(discord.Client):
                             await self.safe_send_message(recordChannel, "**New Message:** {}".format(after.content))
         except: pass
 
-    async def on_reaction_add(self, reaction, user):
+    async def on_raw_reaction_add(self, payload):
         log.info("Reaction added")
-        document = await self.dbservers.find_one({"server_id": user.guild.id})
+        document = await self.dbservers.find_one({"server_id": payload.guild_id})
         try:
             if document['selfrolemsg']:
                 if document['selfrole']:
                     selfrolemsg = document['selfrolemsg']
                     for msg in selfrolemsg:
-                        if reaction.message.id == int(msg):
+                        if payload.message_id == int(msg):
                             rrlist = document['selfrole']
                             for rolename in rrlist:
-                                if reaction.emoji.name == rrlist[rolename]:
+                                if payload.emoji.name == rrlist[rolename]:
                                     role = discord.utils.find(lambda r: r.name == rolename, guild.roles)
                                     if role: 
                                         try:
-                                            await author.add_roles(role)
+                                            await payload.member.add_roles(role)
                                         except:
-                                            raise exceptions.CommandError("Failed to add {} to role {}".format(author.name, role.name))
+                                            raise exceptions.CommandError("Failed to add {} to role {}".format(payload.member.name, role.name))
         except: pass
 
 #############################################
