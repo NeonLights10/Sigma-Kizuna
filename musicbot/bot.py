@@ -1261,7 +1261,7 @@ class MusicBot(discord.Client):
         post = {}
         for arg in lcopy:
             arg = arg.split(",")
-            if arg.len() == 2:
+            if len(arg) == 2:
                 role = discord.utils.find(lambda r: r.name == arg[0], guild.roles)
                 if role:
                     post[role.name] = arg[1]
