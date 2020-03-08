@@ -4105,10 +4105,32 @@ class MusicBot(discord.Client):
                                     log.info("role found") 
                                     try:
                                         await payload.member.add_roles(role)
-                                        await self.safe_send_message(recordChannel, "**Added role**")
                                     except:
                                         raise exceptions.CommandError("Failed to add {} to role {}".format(payload.member.name, role.name))
-        #except: pass
+
+    async def on_raw_reaction_remove(self, payload):
+        document = await self.dbservers.find_one({"server_id": payload.guild_id})
+        if document['selfrolemsg']:
+            if document['selfrole']:
+                selfrolemsg = document['selfrolemsg']
+                for msg in selfrolemsg:
+                    log.info("Checking payload id against msg id " + str(msg))
+                    if payload.message_id == int(msg):
+                        log.info("payload id match")
+                        rrlist = document['selfrole']
+                        for rolename in rrlist:
+                            log.info("Checking payload emoji against list of emoji")
+                            log.info("payload: " + str(payload.emoji))
+                            log.info("stored value: " + rrlist[rolename])
+                            if str(payload.emoji) == rrlist[rolename]:
+                                log.info("payload emoji match")
+                                role = discord.utils.find(lambda r: r.name == rolename, payload.member.guild.roles)
+                                if role:
+                                    log.info("role found") 
+                                    try:
+                                        await payload.member.remove_roles(role)
+                                    except:
+                                        raise exceptions.CommandError("Failed to add {} to role {}".format(payload.member.name, role.name))
 
 #############################################
 
