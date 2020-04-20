@@ -4071,7 +4071,7 @@ class MusicBot(discord.Client):
             if document['ruleschannel']:
                 ruleschannel = int(document['ruleschannel'])
                 #TODO: replace with a embed
-                content = discord.Embed(colour=0x1abc9c, title="Istariana vilseriol!", description="Welcome <@{}> to the {} Discord server. Please read our <#{}>, thank you.".format(member.id, member.guild.name, ruleschannel))
+                content = discord.Embed(colour=0x1abc9c, title="Istariana vilseriol!", description="Welcome {} to the {} Discord server. Please read our <#{}>, thank you.".format(member.name, member.guild.name, ruleschannel))
                 content.set_author(name="RuRune", icon_url=self.user.avatar_url)
                 content.set_footer(text="ALICE IN DISSONANCE | {}".format(time.ctime()))
                 content.set_thumbnail(url="https://files.s-neon.xyz/share/big-icon-512.png")
@@ -4079,7 +4079,7 @@ class MusicBot(discord.Client):
                 await self.safe_send_message(member.guild.get_channel(welcomechannel), content)
                 #await self.safe_send_message(member.guild.get_channel(welcomechannel), "Istariana vilseriol <@{}>! Welcome to the {} Discord server. Please read our <#{}>, thank you.".format(member.id, member.guild.name, ruleschannel))
             else:
-                content = discord.Embed(colour=0x1abc9c, title="Istariana vilseriol!", description="Welcome <@{}> to the {} Discord server.".format(member.id, member.guild.name))
+                content = discord.Embed(colour=0x1abc9c, title="Istariana vilseriol!", description="Welcome {} to the {} Discord server.".format(member.name, member.guild.name))
                 content.set_author(name="RuRune", icon_url=self.user.avatar_url)
                 content.set_footer(text="ALICE IN DISSONANCE | {}".format(time.ctime()))
                 content.set_thumbnail(url="https://files.s-neon.xyz/share/big-icon-512.png")
@@ -4120,11 +4120,11 @@ class MusicBot(discord.Client):
     # Send farewell message whenever a member leaves the server
     async def on_member_remove(self, member):
         document = await self.dbservers.find_one({"server_id": member.guild.id})
-        if document['welcomechannel']:
-            welcomechannel = int(document['welcomechannel'])
+        if document['msglog']:
+            farewellchannel = int(document['msgchannel'])
             name = member.name
             strip_name = re.sub('discord\.gg\/\w{7,}', '[removed]', name)
-            await self.safe_send_message(member.guild.get_channel(welcomechannel), "Farewell {}! (ID: {})".format(strip_name, member.id))
+            await self.safe_send_message(member.guild.get_channel(farewellchannel), "Farewell {}! (ID: {})".format(strip_name, member.id))
 
     # Logs a deleted message, which includes User + Discriminator, User ID, channel, message contents, and attachments (if any)
     async def on_message_delete(self, message):
