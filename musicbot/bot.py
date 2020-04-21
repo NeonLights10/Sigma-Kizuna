@@ -4121,7 +4121,7 @@ class MusicBot(discord.Client):
     async def on_member_remove(self, member):
         document = await self.dbservers.find_one({"server_id": member.guild.id})
         if document['msglog']:
-            farewellchannel = int(document['msgchannel'])
+            farewellchannel = int(document['msglog'])
             name = member.name
             strip_name = re.sub('discord\.gg\/\w{7,}', '[removed]', name)
             await self.safe_send_message(member.guild.get_channel(farewellchannel), "Farewell {}! (ID: {})".format(strip_name, member.id))
