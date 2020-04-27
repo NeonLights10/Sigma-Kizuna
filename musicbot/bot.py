@@ -4107,7 +4107,7 @@ class MusicBot(discord.Client):
                             update = { "$set": {} }
                             update['$set'][invite.code] = invite.uses
                             await self.dbservers.update_one({"server_id": member.guild.id}, update)
-                            await self.safe_send_message(recordChannel, "A new member joined using the invite code **{}**. The last person to join was **{}#{}** ({})".format(invite.code, member.name, memeber.discriminator, member.id))
+                            await self.safe_send_message(recordChannel, "A new member joined using the invite code **{}**. The last person to join was **{}#{}** ({})".format(invite.code, member.name, member.discriminator, member.id))
                 except KeyError:
                     log.info("Invite code not in database")
                     recordChannel = member.guild.get_channel(msglog)
