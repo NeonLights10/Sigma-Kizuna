@@ -4067,6 +4067,7 @@ class MusicBot(discord.Client):
             else:
                 raise ValueError("Auto-assign role does not exist!")
         if document['welcomechannel']:
+            welcomebanners = ["https://files.s-neon.xyz/share/welcomebanner-ps4.png", "https://files.s-neon.xyz/share/welcomebanner.png", "https://files.s-neon.xyz/share/welcomebanner-ritorin.png"]
             welcomechannel = int(document['welcomechannel'])
             if document['ruleschannel']:
                 ruleschannel = int(document['ruleschannel'])
@@ -4075,7 +4076,7 @@ class MusicBot(discord.Client):
                 content.set_author(name="RuRune", icon_url=self.user.avatar_url)
                 content.set_footer(text="ALICE IN DISSONANCE | {}".format(time.ctime()))
                 content.set_thumbnail(url="https://files.s-neon.xyz/share/big-icon-512.png")
-                content.set_image(url="https://files.s-neon.xyz/share/welcomebanner-ps4.png")
+                content.set_image(url=random.choice(welcomebanners))
                 await self.safe_send_message(member.guild.get_channel(welcomechannel), content)
                 #await self.safe_send_message(member.guild.get_channel(welcomechannel), "Istariana vilseriol <@{}>! Welcome to the {} Discord server. Please read our <#{}>, thank you.".format(member.id, member.guild.name, ruleschannel))
             else:
@@ -4083,7 +4084,7 @@ class MusicBot(discord.Client):
                 content.set_author(name="RuRune", icon_url=self.user.avatar_url)
                 content.set_footer(text="ALICE IN DISSONANCE | {}".format(time.ctime()))
                 content.set_thumbnail(url="https://files.s-neon.xyz/share/big-icon-512.png")
-                content.set_image(url="https://files.s-neon.xyz/share/welcomebanner-ps4.png")
+                content.set_image(url=random.choice(welcomebanners))
                 await self.safe_send_message(member.guild.get_channel(welcomechannel), content)
                 #await self.safe_send_message(member.guild.get_channel(welcomechannel), "Istariana vilseriol <@{}>! Welcome to the {} Discord server.".format(member.id, member.guild.name))
         
