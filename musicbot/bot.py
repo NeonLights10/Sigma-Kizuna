@@ -1415,29 +1415,69 @@ class MusicBot(discord.Client):
     async def cmd_configselfrole(self, guild, message, leftover_args):
         """
         Usage:
-            {command_prefix}configselfrole ["role_name, emoji"] <"role_name, emoji">
+            {command_prefix}configselfrole add/edit/remove ["role_name, emoji"] <"role_name, emoji">
         Configures the self role by reaction with the following roles and assigned emoji.
         You can do multiple at the same time. You must use the emoji, no space after.
         """
+
+        action = leftover_args.pop(0)
+        action = action.lower()
+
         try:
             leftover_args = shlex.split(' '.join(leftover_args))
         except ValueError:
             raise exceptions.CommandError("Please quote the roles properly", expire_in=30)
         lcopy = leftover_args[:]
-        post = {}
-        for arg in lcopy:
-            arg = arg.split(", ")
-            if len(arg) == 2:
-                role = discord.utils.find(lambda r: r.name == arg[0], guild.roles)
-                if role:
-                    post[role.name] = arg[1]
-                else:
-                    raise exceptions.CommandError("Role {} not found! Did you spell it wrong?".format(arg))
-            else:
-                raise exceptions.CommandError("You specified too few or too many arguments in a quotation!", expire_in=30)
 
-            await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'selfrole': post}})
-        return Response("Enabled selfrole for the following roles.", delete_after=30)
+        document = await self.dbservers.find_one({"server_id": guild.id})
+        post = document['selfrole']
+
+        if action == "add":
+            for arg in lcopy:
+                arg = arg.split(", ")
+                if len(arg) == 2:
+                    role = discord.utils.find(lambda r: r.name == arg[0], guild.roles)
+                    if role:
+                        post[role.name] = arg[1]
+                    else:
+                        raise exceptions.CommandError("Role {} not found! Did you spell it wrong?".format(arg))
+                else:
+                    raise exceptions.CommandError("You specified too few or too many arguments in a quotation!", expire_in=30)
+
+        if action == "edit":
+            for arg in lcopy:
+                if len(arg) == 2:
+                    role = discord.utils.find(lambda r: r.name == arg[0], guild.roles)
+                    if role:
+                        if role.name in post:
+                            post[role.name] = arg[1]
+                        else:
+                            raise exceptions.CommandError("You have not assigned this role before! Use the 'add' action instead.", expire_in=30)
+                    else:
+                        raise exceptions.CommandError("Role {} not found! Did you spell it wrong?".format(arg))
+                else:
+                    raise exceptions.CommandError("You specified too few or too many arguments in a quotation!", expire_in=30)
+
+        elif action == "remove":
+            for arg in lcopy:
+                if len(arg) == 2:
+                    role = discord.utils.find(lambda r: r.name == arg[0], guild.roles)
+                    if role:
+                        if role.name in post:
+                            post.pop(role.name, None)
+                        else:
+                            raise exceptions.CommandError("This role was never assigned!", expire_in=30)
+                     else:
+                        raise exceptions.CommandError("Role {} not found! Did you spell it wrong?".format(arg))
+                else:
+                    raise exceptions.CommandError("You specified too few or too many arguments in a quotation!", expire_in=30)
+
+        else:
+            raise exceptions.CommandError("You did not specify an action!", expire_in=30)
+
+        
+        await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'selfrole': post}})
+        return Response("Modifications to selfrole complete.", delete_after=30)
 
     async def cmd_selfrolemsg(self, guild, channel, leftover_args):
         """
