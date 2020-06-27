@@ -1467,7 +1467,7 @@ class MusicBot(discord.Client):
                             post.pop(role.name, None)
                         else:
                             raise exceptions.CommandError("This role was never assigned!", expire_in=30)
-                     else:
+                    else:
                         raise exceptions.CommandError("Role {} not found! Did you spell it wrong?".format(arg))
                 else:
                     raise exceptions.CommandError("You specified too few or too many arguments in a quotation!", expire_in=30)
