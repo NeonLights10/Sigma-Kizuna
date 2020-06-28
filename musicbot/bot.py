@@ -1328,13 +1328,14 @@ class MusicBot(discord.Client):
         action = action.lower()
         if action in validActions:
 
-            def id_check(m):
-                return m.id == msgid
-
             if action == "disable":
                 posts = await self.dbselfrole.find({"guild": guild.id})
                 for post in posts:
                     msgChannel = discord.utils.find(lambda c: c.id == int(post['channel']), guild.text_channels)
+                    
+                    def id_check(m):
+                        return m.id == post['msgid']
+
                     try:
                         await msgChannel.purge(check=id_check)
                         await db.selfrole.delete_many({"guild": guild.id})
@@ -1349,6 +1350,9 @@ class MusicBot(discord.Client):
                     if document:
                         msgChannel = discord.utils.find(lambda c: c.id == int(document['channel']), guild.text_channels)
                         
+                        def id_check(m):
+                            return m.id == int(msgid)
+
                         if action == "remove":
                             try:
                                 await msgChannel.purge(check=id_check)
