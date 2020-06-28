@@ -1295,7 +1295,7 @@ class MusicBot(discord.Client):
                     else:
                         raise exceptions.CommandError("You specified too few or too many arguments in a quotation!", expire_in=30)
 
-                postChannel = discord.utils.find(lambda r: r.id == postChannel, guild.channels)
+                postChannel = channel_mentions[0]
                 if count == 0:
                     content = discord.Embed(colour=0x1abc9c, title="Self Assignable Roles", description="React to the following messages to recieve the corresponding roles!")
                     content.set_author(name="RuRune v{}".format(BOTVERSION), icon_url=self.user.avatar_url)
