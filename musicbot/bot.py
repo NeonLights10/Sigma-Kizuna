@@ -1285,11 +1285,11 @@ class MusicBot(discord.Client):
                 post[title] = title
                 selfroles = {}
                 for arg in finalArgs:
-                    roleParameters = regex.split(finalArgs)
+                    roleParameters = regex.split(arg)
                     if len(roleParameters) == 2:
-                        role = discord.utils.find(lambda r: r.name == arg[0], guild.roles)
+                        role = discord.utils.find(lambda r: r.name == roleParameters[0], guild.roles)
                         if role:
-                            selfroles[role.id] = arg[1]
+                            selfroles[role.id] = roleParameters[1]
                         else:
                             raise exceptions.CommandError("Role {} not found! Did you spell it wrong?".format(arg))
                     else:
