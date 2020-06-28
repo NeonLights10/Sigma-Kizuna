@@ -1282,7 +1282,7 @@ class MusicBot(discord.Client):
             if len(regex.split(title)) > 1:
                 raise exceptions.CommandError("It seems like you forgot a title, or used an invalid title format!")
             else:
-                post[title] = title
+                post['title'] = title
                 selfroles = {}
                 for arg in finalArgs:
                     roleParameters = regex.split(arg)
@@ -1313,9 +1313,9 @@ class MusicBot(discord.Client):
                 msg = await self.safe_send_message(postChannel, content)
                 count += 1
             
-                post[msgid] = msg.id
-                post[selfroles] = selfroles
-                await self.dbselfrole.insert_one(post)
+                post['msgid'] = msg.id
+                post['selfroles'] = selfroles
+                await self.dbservers.update_one({"msgid": guild.id}, {"$set": post})
         return Response("Enabled selfrole.", delete_after=30)
 
     async def cmd_configselfrole(self, guild, message, leftover_args):
