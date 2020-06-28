@@ -1315,7 +1315,7 @@ class MusicBot(discord.Client):
             
                 post['msgid'] = msg.id
                 post['selfroles'] = selfroles
-                await self.dbservers.update_one({"msgid": guild.id}, {"$set": post})
+                await self.dbselfrole.update_one({"msgid": guild.id}, {"$set": post})
         return Response("Enabled selfrole.", delete_after=30)
 
     async def cmd_configselfrole(self, guild, message, leftover_args):
