@@ -1345,9 +1345,8 @@ class MusicBot(discord.Client):
 
             else:
                 msgid = leftover_args.pop(0)
-                log.info(msgid)
                 if re.search("\d{18}", msgid):
-                    document = await self.dbselfrole.find_one({"msgid": msgid})
+                    document = await self.dbselfrole.find_one({"msgid": int(msgid)})
                     if document:
                         msgChannel = discord.utils.find(lambda c: c.id == int(document['channel'], guild.text_channels))
                         
@@ -1355,7 +1354,7 @@ class MusicBot(discord.Client):
                             try:
                                 await msgChannel.purge(check=id_check)
                                 title = document['title']
-                                await db.selfrole.delete_one({"msgid": msgid})
+                                await db.selfrole.delete_one({"msgid":int(msgid)})
                                 return Response(f"Selfrole category {title} was deleted.", delete_after=30)
                             except discord.Forbidden:
                                 raise exceptions.CommandError("It seems like I don't have the permissions to do that. Check your server settings?", expire_in=20)
