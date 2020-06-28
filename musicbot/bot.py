@@ -1289,7 +1289,7 @@ class MusicBot(discord.Client):
                     if len(roleParameters) == 2:
                         role = discord.utils.find(lambda r: r.name == roleParameters[0], guild.roles)
                         if role:
-                            selfroles[role.id] = roleParameters[1]
+                            selfroles[str(role.id)] = roleParameters[1]
                         else:
                             raise exceptions.CommandError("Role {} not found! Did you spell it wrong?".format(arg))
                     else:
@@ -1315,7 +1315,7 @@ class MusicBot(discord.Client):
             
                 post['msgid'] = msg.id
                 post['selfroles'] = selfroles
-                await self.dbselfrole.update_one({"msgid": guild.id}, {"$set": post})
+                await self.dbselfrole.insert_one(post)
         return Response("Enabled selfrole.", delete_after=30)
 
     async def cmd_configselfrole(self, guild, message, leftover_args):
