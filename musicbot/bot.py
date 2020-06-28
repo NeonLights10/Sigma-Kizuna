@@ -1407,7 +1407,7 @@ class MusicBot(discord.Client):
                                 content.set_footer(text="ALICE IN DISSONANCE")
                                 
                                 try:
-                                    message = await channel.fetch_message(msgid)
+                                    message = await msgChannel.fetch_message(msgid)
                                     await message.edit(embed=content)
                                     await message.clear_reactions()
 
