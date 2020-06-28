@@ -4164,6 +4164,7 @@ class MusicBot(discord.Client):
 
     # Scans for reactions on messages. If found, checks if the reaction is on a specified message in order to determine if someone is assigning themselves a role.
     async def on_raw_reaction_add(self, payload):
+        log.info("REACTION ADDED")
         document = await self.dbselfrole.find_one({"msg_id": payload.message_id})
         #Check if self role by reaction is enabled for message(s)
         if document:
