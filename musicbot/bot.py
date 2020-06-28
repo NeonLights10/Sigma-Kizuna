@@ -1353,7 +1353,7 @@ class MusicBot(discord.Client):
                             try:
                                 await msgChannel.purge(check=id_check)
                                 title = document['title']
-                                await db.selfrole.delete_one({"msgid":int(msgid)})
+                                await self.dbselfrole.delete_one({"msgid":int(msgid)})
                                 return Response(f"Selfrole category {title} was deleted.", delete_after=30)
                             except discord.Forbidden:
                                 raise exceptions.CommandError("It seems like I don't have the permissions to do that. Check your server settings?", expire_in=20)
