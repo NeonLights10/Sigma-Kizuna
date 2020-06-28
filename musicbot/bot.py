@@ -4164,8 +4164,7 @@ class MusicBot(discord.Client):
 
     # Scans for reactions on messages. If found, checks if the reaction is on a specified message in order to determine if someone is assigning themselves a role.
     async def on_raw_reaction_add(self, payload):
-        log.info("REACTION ADDED")
-        document = await self.dbselfrole.find_one({"msg_id": payload.message_id})
+        document = await self.dbselfrole.find_one({"msgid": payload.message_id})
         #Check if self role by reaction is enabled for message(s)
         if document:
             #Grab dictionary of values
@@ -4185,7 +4184,7 @@ class MusicBot(discord.Client):
 
     # Inverse of the above. Removes roles when the user removes their reaction from the specified message.
     async def on_raw_reaction_remove(self, payload):
-        document = await self.dbselfrole.find_one({"msg_id": payload.message_id})
+        document = await self.dbselfrole.find_one({"msgid": payload.message_id})
         if document:
             selfrole = document['selfrole']
             for rolename in selfrole.items():
