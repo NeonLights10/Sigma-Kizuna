@@ -1244,6 +1244,8 @@ class MusicBot(discord.Client):
             {command_prefix}selfrole ["Utility Roles" "role_name, emoji" "role_name, emoji" "role_name, emoji"] ["Pronouns" "role_name, emoji"]
         """
 
+        leftover_args = " ".join(leftover_args)
+
         if len(channel_mentions) > 1:
             raise exceptions.CommandError("You can only specify one channel!")
         if re.search("<#([^>]+)", leftover_args):
