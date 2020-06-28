@@ -1372,7 +1372,7 @@ class MusicBot(discord.Client):
 
                             post = {
                                 'guild': guild.id,
-                                'channel': channel_mentions[0].id,
+                                'channel': msgChannel.id,
                                 'msgid': None,
                                 'title': None,
                                 'selfroles': None,
