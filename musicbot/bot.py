@@ -1329,8 +1329,7 @@ class MusicBot(discord.Client):
         if action in validActions:
 
             if action == "disable":
-                posts = self.dbselfrole.find({"guild": guild.id})
-                for post in posts:
+                async for post in self.dbselfrole.find({"guild": guild.id}):
                     msgChannel = discord.utils.find(lambda c: c.id == int(post['channel']), guild.text_channels)
                     
                     def id_check(m):
