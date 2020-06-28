@@ -1378,7 +1378,7 @@ class MusicBot(discord.Client):
                                 'selfroles': None,
                             }
 
-                            finalArgs = shlex.split(category)
+                            finalArgs = shlex.split(parsedArgs)
 
                             title = finalArgs.pop(0)
                             regex = re.compile(",\s*")
