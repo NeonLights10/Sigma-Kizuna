@@ -4171,10 +4171,8 @@ class MusicBot(discord.Client):
             selfrole = document['selfroles']
             for role in selfrole.items():
                 #If the reaction is not listed in the dictionary, ignore it.
-                log.info(payload.emoji)
-                log.info(role[1])
                 if str(payload.emoji) == role[1]:
-                    role = discord.utils.find(lambda r: r.id == role[0], payload.member.guild.roles)
+                    role = discord.utils.find(lambda r: r.id == int(role[0]), payload.member.guild.roles)
                     if role:
                         try:
                             await payload.member.add_roles(role)
@@ -4187,12 +4185,12 @@ class MusicBot(discord.Client):
         document = await self.dbselfrole.find_one({"msgid": payload.message_id})
         if document:
             selfrole = document['selfroles']
-            for rolename in selfrole.items():
+            for role in selfrole.items():
                 if str(payload.emoji) == role[1]:
                     # raw reaction removal does not provide us with the member object, so we have to fetch the guild, then the member :(
                     guild = self.get_guild(payload.guild_id)
                     member = guild.get_member(payload.user_id)
-                    role = discord.utils.find(lambda r: r.id == role[0], guild.roles)
+                    role = discord.utils.find(lambda r: r.id == int(role[0]), guild.roles)
                     if role:
                         try:
                             await member.remove_roles(role)
