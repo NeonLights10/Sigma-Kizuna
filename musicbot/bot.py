@@ -1347,7 +1347,7 @@ class MusicBot(discord.Client):
                 if re.search("\d{18}", msgid):
                     document = await self.dbselfrole.find_one({"msgid": int(msgid)})
                     if document:
-                        msgChannel = discord.utils.find(lambda c: c.id == int(document['channel'], guild.text_channels))
+                        msgChannel = discord.utils.find(lambda c: c.id == int(document['channel']), guild.text_channels)
                         
                         if action == "remove":
                             try:
