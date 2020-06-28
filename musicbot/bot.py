@@ -1338,7 +1338,7 @@ class MusicBot(discord.Client):
                     msgChannel = discord.utils.find(lambda c: c.id == int(post['channel'], guild.text_channels))
                     try:
                         await msgChannel.purge(check=id_check)
-                        await db.selfrole.delete_many(({"guild": guild.id})
+                        await db.selfrole.delete_many({"guild": guild.id})
                     except discord.Forbidden:
                         raise exceptions.CommandError("It seems like I don't have the permissions to do that. Check your server settings?", expire_in=20)
                 return Response("Selfrole was disabled for this server.", delete_after=30)
