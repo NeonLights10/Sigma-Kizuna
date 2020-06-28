@@ -1258,64 +1258,64 @@ class MusicBot(discord.Client):
 
         parsedResult = re.finditer("\[([^\]]+)", leftover_args)
         
-        if len(parsedResult) < 1:
+        parsedArgs = []
+        for result in parsedResult:
+            parsedArgs.append(result.group(1))
+
+        if len(parsedArgs) < 1:
             raise exceptions.CommandError("Please ensure each category is enclosed in []")
-        else:
-            parsedArgs = []
-            for result in parsedResult:
-                parsedArgs.append(result.group(1))
 
-            count = 0
-            for category in parsedArgs:
-                post = {
-                    'guild': guild.id,
-                    'channel': channel_mentions[0].id,
-                    'msgid': None,
-                    'title': None,
-                    'selfroles': None,
-                }
+        count = 0
+        for category in parsedArgs:
+            post = {
+                'guild': guild.id,
+                'channel': channel_mentions[0].id,
+                'msgid': None,
+                'title': None,
+                'selfroles': None,
+            }
 
-                finalArgs = shlex.split(category)
+            finalArgs = shlex.split(category)
 
-                title = finalArgs.pop(0)
-                regex = re.compile(",\s*")
-                if len(regex.split(title)) > 1:
-                    raise exceptions.CommandError("It seems like you forgot a title, or used an invalid title format!")
-                else:
-                    post[title] = title
-                    selfroles = {}
-                    for arg in finalArgs:
-                        roleParameters = regex.split(finalArgs)
-                        if len(roleParameters) == 2:
-                            role = discord.utils.find(lambda r: r.name == arg[0], guild.roles)
-                            if role:
-                                selfroles[role.id] = arg[1]
-                            else:
-                                raise exceptions.CommandError("Role {} not found! Did you spell it wrong?".format(arg))
+            title = finalArgs.pop(0)
+            regex = re.compile(",\s*")
+            if len(regex.split(title)) > 1:
+                raise exceptions.CommandError("It seems like you forgot a title, or used an invalid title format!")
+            else:
+                post[title] = title
+                selfroles = {}
+                for arg in finalArgs:
+                    roleParameters = regex.split(finalArgs)
+                    if len(roleParameters) == 2:
+                        role = discord.utils.find(lambda r: r.name == arg[0], guild.roles)
+                        if role:
+                            selfroles[role.id] = arg[1]
                         else:
-                            raise exceptions.CommandError("You specified too few or too many arguments in a quotation!", expire_in=30)
-                    
-                    if count == 0:
-                        content = discord.Embed(colour=0x1abc9c, title="Self Assignable Roles", description="React to the following messages to recieve the corresponding roles!")
-                        content.set_author(name="RuRune v{}".format(BOTVERSION), icon_url=self.user.avatar_url)
-                        content.set_footer(text="ALICE IN DISSONANCE")
-                        await self.safe_send_message(postChannel, content)
-                        count += 1
-
-                    description = ""
-                    for role in selfroles.items():
-                        description = description + f"{role[1]} <@&{role[0]}>\n"
-
-                    content = discord.Embed(colour=0x1abc9c, title=title, description=description)
+                            raise exceptions.CommandError("Role {} not found! Did you spell it wrong?".format(arg))
+                    else:
+                        raise exceptions.CommandError("You specified too few or too many arguments in a quotation!", expire_in=30)
+                
+                if count == 0:
+                    content = discord.Embed(colour=0x1abc9c, title="Self Assignable Roles", description="React to the following messages to recieve the corresponding roles!")
                     content.set_author(name="RuRune v{}".format(BOTVERSION), icon_url=self.user.avatar_url)
                     content.set_footer(text="ALICE IN DISSONANCE")
-                    msg = await self.safe_send_message(postChannel, content)
+                    await self.safe_send_message(postChannel, content)
                     count += 1
-                
-                    post[msgid] = msg.id
-                    post[selfroles] = selfroles
-                    await self.dbselfrole.insert_one(post)
-            return Response("Enabled selfrole.", delete_after=30)
+
+                description = ""
+                for role in selfroles.items():
+                    description = description + f"{role[1]} <@&{role[0]}>\n"
+
+                content = discord.Embed(colour=0x1abc9c, title=title, description=description)
+                content.set_author(name="RuRune v{}".format(BOTVERSION), icon_url=self.user.avatar_url)
+                content.set_footer(text="ALICE IN DISSONANCE")
+                msg = await self.safe_send_message(postChannel, content)
+                count += 1
+            
+                post[msgid] = msg.id
+                post[selfroles] = selfroles
+                await self.dbselfrole.insert_one(post)
+        return Response("Enabled selfrole.", delete_after=30)
 
     async def cmd_configselfrole(self, guild, message, leftover_args):
         """
