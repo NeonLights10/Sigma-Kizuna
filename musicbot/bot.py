@@ -4168,7 +4168,7 @@ class MusicBot(discord.Client):
         #Check if self role by reaction is enabled for message(s)
         if document:
             #Grab dictionary of values
-            selfrole = document['selfrole']
+            selfrole = document['selfroles']
             for role in selfrole.items():
                 #If the reaction is not listed in the dictionary, ignore it.
                 log.info(payload.emoji)
@@ -4186,7 +4186,7 @@ class MusicBot(discord.Client):
     async def on_raw_reaction_remove(self, payload):
         document = await self.dbselfrole.find_one({"msgid": payload.message_id})
         if document:
-            selfrole = document['selfrole']
+            selfrole = document['selfroles']
             for rolename in selfrole.items():
                 if str(payload.emoji) == role[1]:
                     # raw reaction removal does not provide us with the member object, so we have to fetch the guild, then the member :(
