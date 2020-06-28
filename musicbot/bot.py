@@ -1345,6 +1345,7 @@ class MusicBot(discord.Client):
 
             else:
                 msgid = leftover_args.pop(0)
+                log.info(msgid)
                 if re.search("\d{18}", msgid):
                     document = await self.dbselfrole.find_one({"msgid": msgid})
                     if document:
