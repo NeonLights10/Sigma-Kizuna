@@ -1245,6 +1245,7 @@ class MusicBot(discord.Client):
         """
 
         leftover_args = " ".join(leftover_args)
+        log.info(leftover_args)
 
         if len(channel_mentions) > 1:
             raise exceptions.CommandError("You can only specify one channel!")
