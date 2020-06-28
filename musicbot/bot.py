@@ -1335,7 +1335,7 @@ class MusicBot(discord.Client):
             if action == "disable":
                 posts = await self.dbselfrole.find({"guild": guild.id})
                 for post in posts:
-                    msgChannel = discord.utils.find(lambda c: c.id == int(post['channel'], guild.text_channels))
+                    msgChannel = discord.utils.find(lambda c: c.id == int(post['channel']), guild.text_channels)
                     try:
                         await msgChannel.purge(check=id_check)
                         await db.selfrole.delete_many({"guild": guild.id})
