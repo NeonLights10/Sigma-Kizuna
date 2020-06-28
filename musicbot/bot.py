@@ -1311,6 +1311,10 @@ class MusicBot(discord.Client):
                 content.set_author(name="RuRune v{}".format(BOTVERSION), icon_url=self.user.avatar_url)
                 content.set_footer(text="ALICE IN DISSONANCE")
                 msg = await self.safe_send_message(postChannel, content)
+
+                for role in selfroles.items():
+                    await msg.add_reaction(role[1])
+
                 count += 1
             
                 post['msgid'] = msg.id
@@ -1318,7 +1322,115 @@ class MusicBot(discord.Client):
                 await self.dbselfrole.insert_one(post)
         return Response("Enabled selfrole.", delete_after=30)
 
-    async def cmd_configselfrole(self, guild, message, leftover_args):
+    async def cmd_configselfrole(self, guild, leftover_args):
+        validActions = ["remove", "edit", "disable"]
+
+        action = leftover_args.pop(0)
+        action = action.lower()
+            if action in validActions:
+
+                def id_check(m):
+                    return m.id == msgid
+
+                if action == "disable":
+                    posts = await db.selfrole.find({"guild": guild.id})
+                    for post in posts:
+                        msgChannel = discord.utils.find(lambda c: c.id == int(post['channel'], guild.text_channels))
+                        try:
+                            await msgChannel.purge(check=id_check)
+                            await db.selfrole.delete_many(({"guild": guild.id})
+                        except discord.Forbidden:
+                            raise exceptions.CommandError("It seems like I don't have the permissions to do that. Check your server settings?", expire_in=20)
+                    return Response("Selfrole was disabled for this server.", delete_after=30)
+
+                else:
+                    msgid = leftover_args.pop(0)
+                    if re.search("\d{18}", msgid):
+                        document = await db.selfrole.find_one({"msgid": msgid})
+                        if document:
+                            msgChannel = discord.utils.find(lambda c: c.id == int(document['channel'], guild.text_channels))
+                            
+                            if action == "remove":
+                                try:
+                                    await msgChannel.purge(check=id_check)
+                                    title = document['title']
+                                    await db.selfrole.delete_one({"msgid": msgid})
+                                    return Response(f"Selfrole category {title} was deleted.", delete_after=30)
+                                except discord.Forbidden:
+                                    raise exceptions.CommandError("It seems like I don't have the permissions to do that. Check your server settings?", expire_in=20)
+                            
+                            if action == "edit":
+                                leftover_args = " ".join(leftover_args)
+                                log.info(leftover_args)
+                                parsedResult = re.finditer("\[([^\]]+)", leftover_args)
+
+                                parsedArgs = []
+                                for result in parsedResult:
+                                    parsedArgs.append(result.group(1))
+
+                                if len(parsedArgs) < 1:
+                                    raise exceptions.CommandError("Please ensure each category is enclosed in []")
+
+                                post = {
+                                    'guild': guild.id,
+                                    'channel': channel_mentions[0].id,
+                                    'msgid': None,
+                                    'title': None,
+                                    'selfroles': None,
+                                }
+
+                                finalArgs = shlex.split(category)
+
+                                title = finalArgs.pop(0)
+                                regex = re.compile(",\s*")
+                                if len(regex.split(title)) > 1:
+                                    raise exceptions.CommandError("It seems like you forgot a title, or used an invalid title format!")
+                                else:
+                                    post['title'] = title
+                                    selfroles = {}
+                                    for arg in finalArgs:
+                                        roleParameters = regex.split(arg)
+                                        if len(roleParameters) == 2:
+                                            role = discord.utils.find(lambda r: r.name == roleParameters[0], guild.roles)
+                                            if role:
+                                                selfroles[str(role.id)] = roleParameters[1]
+                                            else:
+                                                raise exceptions.CommandError("Role {} not found! Did you spell it wrong?".format(arg))
+                                        else:
+                                            raise exceptions.CommandError("You specified too few or too many arguments in a quotation!", expire_in=30)
+
+                                    description = ""
+                                    for role in selfroles.items():
+                                        description = description + f"{role[1]} <@&{role[0]}>\n"
+
+                                    content = discord.Embed(colour=0x1abc9c, title=title, description=description)
+                                    content.set_author(name="RuRune v{}".format(BOTVERSION), icon_url=self.user.avatar_url)
+                                    content.set_footer(text="ALICE IN DISSONANCE")
+                                    
+                                    try:
+                                        message = await channel.fetch_message(msgid)
+                                        await message.edit(embed=content)
+                                        await message.clear_reactions()
+
+                                        for role in selfroles.items():
+                                            await message.add_reaction(role[1])
+
+                                    except discord.Forbidden:
+                                        raise exceptions.CommandError("I don't have permissions to read message history.")
+
+                                    except discord.NotFound:
+                                        raise exceptions.CommandError("Message not found. Check the message id?")
+
+
+                                    post['msgid'] = message.id
+                                    post['selfroles'] = selfroles
+                                    await self.dbselfrole.update_one({"msgid": message.id}, {"$set": post}) 
+                        else:
+                            raise exceptions.CommandError("Message not found.")
+                    else:
+                        raise exceptions.CommandError("Please specify a message id!")
+
+    '''async def cmd_configselfrole(self, guild, message, leftover_args):
         """
         Usage:
             {command_prefix}configselfrole ["role_name, emoji"] <"role_name, emoji">
@@ -1372,7 +1484,7 @@ class MusicBot(discord.Client):
         await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'selfrolemsg': post}})
         return Response("Enabled self role reaction tracking for the following messages.", delete_after=30)
 
-    '''async def cmd_selfrole(self, guild, message, author, leftover_args):
+    async def cmd_selfrole(self, guild, message, author, leftover_args):
         document = await self.dbservers.find_one({"server_id": guild.id})
         if document['selfrole']:
             try:
