@@ -114,6 +114,7 @@ class MusicBot(discord.Client):
         self.db = self.mclient[self.database_name]
         self.dbservers = self.db.servers
         self.dbmsgid = self.db.msgid
+        self.dbselfrole = self.db.selfrole
 
         log.info('Starting Sigma {}'.format(BOTVERSION))
 
@@ -1236,21 +1237,82 @@ class MusicBot(discord.Client):
         else:
             raise exceptions.CommandError("Specify a database config value!")
 
-    '''async def cmd_configselfrole(self, guild, message, author, leftover_args):
-        try:
-            leftover_args = shlex.split(' '.join(leftover_args))
-        except ValueError:
-            raise exceptions.CommandError("Please quote the roles properly", expire_in=30)
-        lcopy = leftover_args[:]
-        post = []
-        for arg in lcopy:
-            role = discord.utils.find(lambda r: r.name == arg, guild.roles)
-            if role:
-                post.append(role.name)
-            else:
-                raise exceptions.CommandError("Role {} not found! Did you spell it wrong?".format(arg))
-        await self.dbservers.update_one({"server_id": guild.id}, {"$set": {'selfrole': post}})
-        return Response("Enabled selfrole for the following roles.", delete_after=30)'''
+    
+    async def cmd_selfrole(self, guild, channel_mentions, leftover_args):
+        """
+        Usage:
+            {command_prefix}selfrole ["Utility Roles" "role_name, emoji" "role_name, emoji" "role_name, emoji"] ["Pronouns" "role_name, emoji"]
+        """
+
+        if len(channel_mentions) > 1:
+            raise exceptions.CommandError("You can only specify one channel!")
+        if re.search("<#([^>]+)", inputArg):
+            postChannel = re.search("<#([^>]+)", inputArg).group(1)
+        else:
+            raise exceptions.CommandError("Please specify a channel!")
+
+        parsedArg = re.sub("<#\d{17,18}>\s*", "", inputArg)
+
+        parsedResult = re.finditer("\[([^\]]+)", inputArg)
+        
+        if len(parsedResult) < 1:
+            raise exceptions.CommandError("Please ensure each category is enclosed in []")
+        else:
+            parsedArgs = []
+            for result in parsedResult:
+                parsedArgs.append(result.group(1))
+
+            count = 0
+            for category in parsedArgs:
+                post = {
+                    'guild': guild.id,
+                    'channel': channel_mentions[0].id,
+                    'msgid': None,
+                    'title': None,
+                    'selfroles': None,
+                }
+
+                finalArgs = shlex.split(category)
+
+                title = finalArgs.pop(0)
+                regex = re.compile(",\s*")
+                if len(regex.split(title)) > 1:
+                    raise exceptions.CommandError("It seems like you forgot a title, or used an invalid title format!")
+                else:
+                    post[title] = title
+                    selfroles = {}
+                    for arg in finalArgs:
+                        roleParameters = regex.split(finalArgs)
+                        if len(roleParameters) == 2:
+                            role = discord.utils.find(lambda r: r.name == arg[0], guild.roles)
+                            if role:
+                                selfroles[role.id] = arg[1]
+                            else:
+                                raise exceptions.CommandError("Role {} not found! Did you spell it wrong?".format(arg))
+                        else:
+                            raise exceptions.CommandError("You specified too few or too many arguments in a quotation!", expire_in=30)
+                    
+                    if count == 0:
+                        content = discord.Embed(colour=0x1abc9c, title="Self Assignable Roles", description="React to the following messages to recieve the corresponding roles!")
+                        content.set_author(name="RuRune v{}".format(BOTVERSION), icon_url=self.user.avatar_url)
+                        content.set_footer(text="ALICE IN DISSONANCE")
+                        await self.safe_send_message(postChannel, content)
+                        count += 1
+
+                    description = ""
+                    for role in selfroles.items():
+                        description = description + f"{role[1]} <@&{role[0]}>\n"
+
+                    content = discord.Embed(colour=0x1abc9c, title=title, description=description)
+                    content.set_author(name="RuRune v{}".format(BOTVERSION), icon_url=self.user.avatar_url)
+                    content.set_footer(text="ALICE IN DISSONANCE")
+                    msg = await self.safe_send_message(postChannel, content)
+                    count += 1
+                
+                    post[msgid] = msg.id
+                    post[selfroles] = selfroles
+                    await self.dbselfrole.insert_one(post)
+            return Response("Enabled selfrole.", delete_after=30)
 
     async def cmd_configselfrole(self, guild, message, leftover_args):
         """
@@ -4098,48 +4160,39 @@ class MusicBot(discord.Client):
 
     # Scans for reactions on messages. If found, checks if the reaction is on a specified message in order to determine if someone is assigning themselves a role.
     async def on_raw_reaction_add(self, payload):
-        document = await self.dbservers.find_one({"server_id": payload.guild_id})
+        document = await self.dbselfrole.find_one({"msg_id": payload.message_id})
         #Check if self role by reaction is enabled for message(s)
-        if document['selfrolemsg']:
-            #Check if there is a dictionary of roles available to check against
-            if document['selfrole']:
-                selfrolemsg = document['selfrolemsg']
-                for msg in selfrolemsg:
-                    #If the message that had a reaction added matches, go ahead and assign the role
-                    if payload.message_id == int(msg):
-                        rrlist = document['selfrole']
-                        for rolename in rrlist:
-                            #If the reaction is not listed in the dictionary, ignore it.
-                            if str(payload.emoji) == rrlist[rolename]:
-                                role = discord.utils.find(lambda r: r.name == rolename, payload.member.guild.roles)
-                                if role:
-                                    try:
-                                        await payload.member.add_roles(role)
-                                        return
-                                    except:
-                                        raise exceptions.CommandError("Failed to add {} to role {}".format(payload.member.name, role.name))
+        if document:
+            #Grab dictionary of values
+            selfrole = document['selfrole']
+            for role in selfrole.items():
+                #If the reaction is not listed in the dictionary, ignore it.
+                if str(payload.emoji) == role[1]:
+                    role = discord.utils.find(lambda r: r.id == role[0], payload.member.guild.roles)
+                    if role:
+                        try:
+                            await payload.member.add_roles(role)
+                            return
+                        except:
+                            raise exceptions.CommandError("Failed to add {} to role {}".format(payload.member.name, role.name))
 
     # Inverse of the above. Removes roles when the user removes their reaction from the specified message.
     async def on_raw_reaction_remove(self, payload):
-        document = await self.dbservers.find_one({"server_id": payload.guild_id})
-        if document['selfrolemsg']:
-            if document['selfrole']:
-                selfrolemsg = document['selfrolemsg']
-                for msg in selfrolemsg:
-                    if payload.message_id == int(msg):
-                        rrlist = document['selfrole']
-                        for rolename in rrlist:
-                            if str(payload.emoji) == rrlist[rolename]:
-                                # raw reaction removal does not provide us with the member object, so we have to fetch the guild, then the member :(
-                                guild = self.get_guild(payload.guild_id)
-                                member = guild.get_member(payload.user_id)
-                                role = discord.utils.find(lambda r: r.name == rolename, guild.roles)
-                                if role:
-                                    try:
-                                        await member.remove_roles(role)
-                                        return
-                                    except:
-                                        raise exceptions.CommandError("Failed to add {} to role {}".format(member.name, role.name))
+        document = await self.dbselfrole.find_one({"msg_id": payload.message_id})
+        if document:
+            selfrole = document['selfrole']
+            for rolename in selfrole.items():
+                if str(payload.emoji) == role[1]:
+                    # raw reaction removal does not provide us with the member object, so we have to fetch the guild, then the member :(
+                    guild = self.get_guild(payload.guild_id)
+                    member = guild.get_member(payload.user_id)
+                    role = discord.utils.find(lambda r: r.id == role[0], guild.roles)
+                    if role:
+                        try:
+                            await member.remove_roles(role)
+                            return
+                        except:
+                            raise exceptions.CommandError("Failed to add {} to role {}".format(member.name, role.name))
 
 #############################################
 
