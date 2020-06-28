@@ -1275,7 +1275,10 @@ class MusicBot(discord.Client):
                 'selfroles': None,
             }
 
-            finalArgs = shlex.split(category)
+            try:
+                finalArgs = shlex.split(category)
+            except ValueError:
+                raise exceptions.CommandError("You used invalid characters in your title/role name! Please don't use [].")
 
             title = finalArgs.pop(0)
             regex = re.compile(",\s*")
@@ -1381,7 +1384,10 @@ class MusicBot(discord.Client):
                                 'selfroles': None,
                             }
 
-                            finalArgs = shlex.split(parsedArgs.pop())
+                            try:
+                                finalArgs = shlex.split(parsedArgs.pop())
+                            except ValueError:
+                                raise exceptions.CommandError("You used invalid characters in your title/role name! Please don't use [].")
 
                             title = finalArgs.pop(0)
                             regex = re.compile(",\s*")
