@@ -1324,7 +1324,6 @@ class MusicBot(discord.Client):
 
     async def cmd_configselfrole(self, guild, leftover_args):
         validActions = ["remove", "edit", "disable"]
-
         action = leftover_args.pop(0)
         action = action.lower()
         if action in validActions:
