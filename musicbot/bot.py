@@ -1333,7 +1333,7 @@ class MusicBot(discord.Client):
                 return m.id == msgid
 
             if action == "disable":
-                posts = await db.selfrole.find({"guild": guild.id})
+                posts = await self.dbselfrole.find({"guild": guild.id})
                 for post in posts:
                     msgChannel = discord.utils.find(lambda c: c.id == int(post['channel'], guild.text_channels))
                     try:
@@ -1346,7 +1346,7 @@ class MusicBot(discord.Client):
             else:
                 msgid = leftover_args.pop(0)
                 if re.search("\d{18}", msgid):
-                    document = await db.selfrole.find_one({"msgid": msgid})
+                    document = await self.dbselfrole.find_one({"msgid": msgid})
                     if document:
                         msgChannel = discord.utils.find(lambda c: c.id == int(document['channel'], guild.text_channels))
                         
