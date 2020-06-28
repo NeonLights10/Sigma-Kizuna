@@ -4171,6 +4171,8 @@ class MusicBot(discord.Client):
             selfrole = document['selfrole']
             for role in selfrole.items():
                 #If the reaction is not listed in the dictionary, ignore it.
+                log.info(payload.emoji)
+                log.info(role[1])
                 if str(payload.emoji) == role[1]:
                     role = discord.utils.find(lambda r: r.id == role[0], payload.member.guild.roles)
                     if role:
