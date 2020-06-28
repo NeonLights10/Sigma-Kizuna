@@ -1246,14 +1246,14 @@ class MusicBot(discord.Client):
 
         if len(channel_mentions) > 1:
             raise exceptions.CommandError("You can only specify one channel!")
-        if re.search("<#([^>]+)", inputArg):
-            postChannel = re.search("<#([^>]+)", inputArg).group(1)
+        if re.search("<#([^>]+)", leftover_args):
+            postChannel = re.search("<#([^>]+)", leftover_args).group(1)
         else:
             raise exceptions.CommandError("Please specify a channel!")
 
-        parsedArg = re.sub("<#\d{17,18}>\s*", "", inputArg)
+        parsedArg = re.sub("<#\d{17,18}>\s*", "", leftover_args)
 
-        parsedResult = re.finditer("\[([^\]]+)", inputArg)
+        parsedResult = re.finditer("\[([^\]]+)", leftover_args)
         
         if len(parsedResult) < 1:
             raise exceptions.CommandError("Please ensure each category is enclosed in []")
