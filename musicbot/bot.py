@@ -1301,8 +1301,8 @@ class MusicBot(discord.Client):
                 postChannel = channel_mentions[0]
                 if count == 0:
                     content = discord.Embed(colour=0x1abc9c, title="Self Assignable Roles", description="React to the following messages to recieve the corresponding roles!")
-                    content.set_author(name="RuRune v{}".format(BOTVERSION), icon_url=self.user.avatar_url)
-                    content.set_footer(text="ALICE IN DISSONANCE")
+                    content.set_author(name="Sigma v{}".format(BOTVERSION), icon_url=self.user.avatar_url)
+                    content.set_footer(text="Sugoi!")
                     await self.safe_send_message(postChannel, content)
                     count += 1
 
@@ -1311,8 +1311,8 @@ class MusicBot(discord.Client):
                     description = description + f"{role[1]} <@&{role[0]}>\n"
 
                 content = discord.Embed(colour=0x1abc9c, title=title, description=description)
-                content.set_author(name="RuRune v{}".format(BOTVERSION), icon_url=self.user.avatar_url)
-                content.set_footer(text="ALICE IN DISSONANCE")
+                content.set_author(name="Sigma v{}".format(BOTVERSION), icon_url=self.user.avatar_url)
+                content.set_footer(text="Sugoi!")
                 msg = await self.safe_send_message(postChannel, content)
 
                 for role in selfroles.items():
