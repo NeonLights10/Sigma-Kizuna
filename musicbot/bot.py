@@ -4290,9 +4290,10 @@ class MusicBot(discord.Client):
             msglog = int(document['msglog'])
             if not message.author.id == self.user.id:
                 if re.match('^{}'.format(self.config.command_prefix), message.content) == None:
+                    cleanMessage = re.sub('<@!?&?\d{17,18}>', '[removed mention]', message.content)
                     recordChannel = message.guild.get_channel(msglog)
                     await self.safe_send_message(recordChannel, "**{}#{}** (ID: {}) message has been deleted from **#{}:**".format(message.author.name, message.author.discriminator, message.author.id, message.channel.name))
-                    await self.safe_send_message(recordChannel, "**Message:** {}".format(message.content))
+                    await self.safe_send_message(recordChannel, "**Message:** {}".format(cleanMessage))
                     if len(message.attachments) > 0:
                         for entry in message.attachments:
                             await self.safe_send_message(recordChannel, "**Attachment:** {}".format(entry.proxy_url))
@@ -4305,9 +4306,10 @@ class MusicBot(discord.Client):
             for message in messages:
                 if not message.author.id == self.user.id:
                     if re.match('^{}'.format(self.config.command_prefix), message.content) == None:
+                        cleanMessage = re.sub('<@!?&?\d{17,18}>', '[removed mention]', message.content)
                         recordChannel = message.guild.get_channel(msglog)
                         await self.safe_send_message(recordChannel, "**{}#{}** (ID: {}) message has been deleted from **#{}:**".format(message.author.name, message.author.discriminator, message.author.id, message.channel.name))
-                        await self.safe_send_message(recordChannel, "**Message:** {}".format(message.content))
+                        await self.safe_send_message(recordChannel, "**Message:** {}".format(cleanMessage))
                         if len(message.attachments) > 0:
                             for entry in message.attachments:
                                 await self.safe_send_message(recordChannel, "**Attachment:** {}".format(entry.proxy_url))
@@ -4319,11 +4321,13 @@ class MusicBot(discord.Client):
             msglog = int(document['msglog'])
             if not before.author.id == self.user.id:
                 if not before.content == after.content:
+                    cleanBeforeMessage = re.sub('<@!?&?\d{17,18}>', '[removed mention]', before.content)
+                    cleanAfterMessage = re.sub('<@!?&?\d{17,18}>', '[removed mention]', after.content)
                     recordChannel = before.guild.get_channel(msglog)
                     if recordChannel:
                         await self.safe_send_message(recordChannel, "**{}#{}** (ID: {}) message has been edited in **#{}:**".format(before.author.name, before.author.discriminator, before.author.id, before.channel.name))
-                        await self.safe_send_message(recordChannel, "**Old Message:** {}".format(before.content))
-                        await self.safe_send_message(recordChannel, "**New Message:** {}".format(after.content))
+                        await self.safe_send_message(recordChannel, "**Old Message:** {}".format(cleanBeforeMessage))
+                        await self.safe_send_message(recordChannel, "**New Message:** {}".format(cleanAfterMessage))
 
     # Patreon auto-reassign co-routine whenever patreonBot removes a role from a patron due to status change. All patrons maintain the role for life, which makes this necessary
     async def on_member_update(self, before, after):
