@@ -21,6 +21,7 @@ ytdl_format_options = {
     'default_search': 'auto',
     'source_address': '0.0.0.0',
     'usenetrc': True,
+    'sleep_interval': 5,
     'writethumbnail': True
 }
 
