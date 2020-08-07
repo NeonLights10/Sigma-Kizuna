@@ -4242,9 +4242,10 @@ class MusicBot(discord.Client):
                 msglog = int(document['msglog'])
                 if not message.author.id == self.user.id:
                     if re.match('^{}'.format(self.config.command_prefix), message.content) == None:
+                        cleanMessage = re.sub('<@!?&?\d{17,18}>', '[removed mention]', message.content)
                         recordChannel = message.guild.get_channel(msglog)
                         await self.safe_send_message(recordChannel, "**{}#{}** (ID: {}) message has been deleted from **#{}:**".format(message.author.name, message.author.discriminator, message.author.id, message.channel.name))
-                        await self.safe_send_message(recordChannel, "**Message:** {}".format(message.content))
+                        await self.safe_send_message(recordChannel, "**Message:** {}".format(cleanMessage))
                         if len(message.attachments) > 0:
                             for entry in message.attachments:
                                 await self.safe_send_message(recordChannel, "**Attachment:** {}".format(entry.proxy_url))
@@ -4259,27 +4260,30 @@ class MusicBot(discord.Client):
                 for message in messages:
                     if not message.author.id == self.user.id:
                         if re.match('^{}'.format(self.config.command_prefix), message.content) == None:
+                            cleanMessage = re.sub('<@!?&?\d{17,18}>', '[removed mention]', message.content)
                             recordChannel = message.guild.get_channel(msglog)
                             await self.safe_send_message(recordChannel, "**{}#{}** (ID: {}) message has been deleted from **#{}:**".format(message.author.name, message.author.discriminator, message.author.id, message.channel.name))
-                            await self.safe_send_message(recordChannel, "**Message:** {}".format(message.content))
+                            await self.safe_send_message(recordChannel, "**Message:** {}".format(cleanMessage))
                             if len(message.attachments) > 0:
                                 for entry in message.attachments:
                                     await self.safe_send_message(recordChannel, "**Attachment:** {}".format(entry.proxy_url))
         except: pass
-        
+
     # Logs an edited message, which includes User + Discriminator, User ID, channel, message contents
     async def on_message_edit(self, before, after):
         document = await self.dbservers.find_one({"server_id": before.guild.id})
-        try:    
+        try:
             if document['msglog']:
                 msglog = int(document['msglog'])
                 if not before.author.id == self.user.id:
                     if not before.content == after.content:
+                        cleanBeforeMessage = re.sub('<@!?&?\d{17,18}>', '[removed mention]', before.content)
+                        cleanAfterMessage = re.sub('<@!?&?\d{17,18}>', '[removed mention]', after.content)
                         recordChannel = before.guild.get_channel(msglog)
                         if recordChannel:
                             await self.safe_send_message(recordChannel, "**{}#{}** (ID: {}) message has been edited in **#{}:**".format(before.author.name, before.author.discriminator, before.author.id, before.channel.name))
-                            await self.safe_send_message(recordChannel, "**Old Message:** {}".format(before.content))
-                            await self.safe_send_message(recordChannel, "**New Message:** {}".format(after.content))
+                            await self.safe_send_message(recordChannel, "**Old Message:** {}".format(cleanBeforeMessage))
+                            await self.safe_send_message(recordChannel, "**New Message:** {}".format(cleanAfterMessage))
         except: pass
 
     # Scans for reactions on messages. If found, checks if the reaction is on a specified message in order to determine if someone is assigning themselves a role.
@@ -4329,10 +4333,10 @@ class MusicBot(discord.Client):
                             msg = await channel.fetch_message(msgid['msg_id'])
                             #log.info(msg.content)
                             if (re.match('^%|^\$|^!|@', msg.content) == None) and (re.match('<@!?{}>'.format(self.user.id), msg.content) == None) and (len(msg.embeds) == 0) and (msg.author.bot == False):
-                                #log.info("Message is ok")
+                                cleanMessage = re.sub('<@!?&?\d{17,18}>', '', msg.content)
                                 log.info("Attempts taken:{}".format(attempts))
                                 log.info("Message ID:{}".format(msg.id))
-                                return msg.content
+                                return cleanMessage
                             else:
                                 attempts += 1
                                 return await self.get_msgid(message, attempts)
