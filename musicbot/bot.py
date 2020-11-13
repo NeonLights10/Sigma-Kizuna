@@ -1412,8 +1412,8 @@ class MusicBot(discord.Client):
                                     description = description + f"{role[1]} <@&{role[0]}>\n"
 
                                 content = discord.Embed(colour=0x1abc9c, title=title, description=description)
-                                content.set_author(name="RuRune v{}".format(BOTVERSION), icon_url=self.user.avatar_url)
-                                content.set_footer(text="ALICE IN DISSONANCE")
+                                content.set_author(name="Sigma v{}".format(BOTVERSION), icon_url=self.user.avatar_url)
+                                content.set_footer(text="Sugoi!")
                                 
                                 try:
                                     message = await msgChannel.fetch_message(msgid)
