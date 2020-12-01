@@ -83,8 +83,6 @@ class MusicBot(discord.Client):
         if aliases_file is None:
             aliases_file = AliasesDefault.aliases_file
 
-        self.intents = intents
-
         self.players = {}
         self.exit_signal = None
         self.init_ok = False
@@ -140,7 +138,7 @@ class MusicBot(discord.Client):
         }
         self.server_specific_data = defaultdict(ssd_defaults.copy)
 
-        super().__init__()
+        super().__init__(intents=intents)
         self.aiosession = aiohttp.ClientSession(loop=self.loop)
         self.http.user_agent += ' MusicBot/%s' % BOTVERSION
 
