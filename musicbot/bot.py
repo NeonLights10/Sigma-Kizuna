@@ -19,8 +19,6 @@ import psutil
 
 import aiohttp
 import discord
-intents = discord.Intents.default()
-intents.members = True
 import colorlog
 allow_requests = True
 import motor.motor_asyncio
@@ -82,6 +80,9 @@ class MusicBot(discord.Client):
 
         if aliases_file is None:
             aliases_file = AliasesDefault.aliases_file
+
+        self.intents = discord.Intents.default()
+        intents.members = True
 
         self.players = {}
         self.exit_signal = None
