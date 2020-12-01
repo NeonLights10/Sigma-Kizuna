@@ -1550,6 +1550,8 @@ class MusicBot(discord.Client):
         Hug somebody!
         If no recipient is specified, Sigma-chan will hug you <3
         """
+        str1 = ','.join(user_mentions)
+        print(str1)
         if user_mentions and len(user_mentions) == 1:
             msg = "{0} hugged {1}!".format(author.mention, user_mentions[0].mention)
         elif user_mentions and len(user_mentions) > 1:
