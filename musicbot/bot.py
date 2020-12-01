@@ -19,6 +19,8 @@ import psutil
 
 import aiohttp
 import discord
+intents = discord.Intents.default()
+intents.members = True
 import colorlog
 allow_requests = True
 import motor.motor_asyncio
@@ -63,7 +65,7 @@ def find_key(dic, val):
     except:
         return False
 
-class MusicBot(discord.Client):
+class MusicBot(discord.Client(intents=intents)):
     def __init__(self, config_file=None, perms_file=None, aliases_file=None):
         try:
             sys.stdout.write("\x1b]2;Sigma {}\x07".format(BOTVERSION))
@@ -80,9 +82,6 @@ class MusicBot(discord.Client):
 
         if aliases_file is None:
             aliases_file = AliasesDefault.aliases_file
-
-        self.intents = discord.Intents.default()
-        intents.members = True
 
         self.players = {}
         self.exit_signal = None
