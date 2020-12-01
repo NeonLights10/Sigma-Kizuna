@@ -66,7 +66,7 @@ def find_key(dic, val):
         return False
 
 class MusicBot(discord.Client):
-    def __init__(self, intents=intents, config_file=None, perms_file=None, aliases_file=None):
+    def __init__(self, config_file=None, perms_file=None, aliases_file=None):
         try:
             sys.stdout.write("\x1b]2;Sigma {}\x07".format(BOTVERSION))
         except:
@@ -82,6 +82,8 @@ class MusicBot(discord.Client):
 
         if aliases_file is None:
             aliases_file = AliasesDefault.aliases_file
+
+        self.intents = intents
 
         self.players = {}
         self.exit_signal = None
