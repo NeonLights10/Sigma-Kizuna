@@ -19,6 +19,8 @@ import psutil
 
 import aiohttp
 import discord
+intents = discord.Intents.default()
+intents.members = True
 import colorlog
 allow_requests = True
 import motor.motor_asyncio
