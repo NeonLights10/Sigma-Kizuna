@@ -65,8 +65,8 @@ def find_key(dic, val):
     except:
         return False
 
-class MusicBot(discord.Client(intents=intents)):
-    def __init__(self, config_file=None, perms_file=None, aliases_file=None):
+class MusicBot(discord.Client):
+    def __init__(self, intents=intents, config_file=None, perms_file=None, aliases_file=None):
         try:
             sys.stdout.write("\x1b]2;Sigma {}\x07".format(BOTVERSION))
         except:
