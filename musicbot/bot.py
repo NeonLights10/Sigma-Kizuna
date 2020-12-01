@@ -20,6 +20,7 @@ import psutil
 import aiohttp
 import discord
 import colorlog
+allow_requests = True
 import motor.motor_asyncio
 
 from io import BytesIO, StringIO
