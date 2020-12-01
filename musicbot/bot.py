@@ -4458,7 +4458,7 @@ class MusicBot(discord.Client):
                 handler_kwargs['permissions'] = user_permissions
 
             if params.pop('user_mentions', None):
-                handler_kwargs['user_mentions'] = list(map(message.guild.query_members, message.raw_mentions))
+                handler_kwargs['user_mentions'] = list(map(await message.guild.query_members, message.raw_mentions))
 
             if params.pop('channel_mentions', None):
                 handler_kwargs['channel_mentions'] = list(map(message.guild.get_channel, message.raw_channel_mentions))
