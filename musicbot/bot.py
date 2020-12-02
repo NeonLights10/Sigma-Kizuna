@@ -2860,6 +2860,8 @@ class MusicBot(discord.Client):
                     # the song is finished downloading, which will then cause another song from autoplaylist to
                     # be added to the queue
                     await entry.get_ready_future()
+                    entry = player.playlist.promote_position(position)
+                    player.skip()
 
                 except exceptions.WrongEntryTypeError as e:
                     if e.use_url == song_url:
@@ -2870,22 +2872,9 @@ class MusicBot(discord.Client):
 
                     return await self.cmd_play(player, channel, author, permissions, leftover_args, e.use_url)
 
-                reply_text = self.str.get('cmd-play-song-reply', "Enqueued `%s` to be played. Position in queue: %s")
-                btext = entry.title
-
             if position == 1 and player.is_stopped:
                 position = self.str.get('cmd-play-next', 'Up next!')
                 reply_text %= (btext, position)
-
-            else:
-                try:
-                    time_until = await player.playlist.estimate_time_until(position, player)
-                    reply_text += self.str.get('cmd-play-eta', ' - estimated time until playing: %s')
-                except:
-                    traceback.print_exc()
-                    time_until = ''
-
-                reply_text %= (btext, position, ftimedelta(time_until))
 
         return Response(reply_text, delete_after=30)
 ################################################
