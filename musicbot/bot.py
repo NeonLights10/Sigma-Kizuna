@@ -19,6 +19,8 @@ import psutil
 import aiohttp
 
 import discord
+intents = discord.Intents.default()
+intents.members = True
 import colorlog
 import motor.motor_asyncio
 
@@ -135,7 +137,7 @@ class MusicBot(discord.Client):
         }
         self.server_specific_data = defaultdict(ssd_defaults.copy)
 
-        super().__init__()
+        super().__init__(intents=intents)
         self.aiosession = aiohttp.ClientSession(loop=self.loop)
         self.http.user_agent += ' MusicBot/%s' % BOTVERSION
 
