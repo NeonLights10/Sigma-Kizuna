@@ -4338,7 +4338,7 @@ class MusicBot(discord.Client):
         if patreon:
             if not patreon in after.roles:
                 # To prevent search through the entire audit log, limit to 1 minute in the past
-                async for entry in guild.audit_logs(action=discord.AuditLogAction.member_role_update, user=self.get_user(216303189073461248), after=(datetime.datetime.now() - datetime.timedelta(minutes=1))):
+                async for entry in guild.audit_logs(action=discord.AuditLogAction.member_role_update, user=self.get_user(216303189073461248), after=(datetime.datetime.now() - datetime.datetime(2020, 11, 13))): #datetime.timedelta(minutes=1)
                     if entry.target == before:
                         try:
                             await after.add_roles(patreon, reason="Auto-reassignment of patron role")
