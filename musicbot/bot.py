@@ -4338,16 +4338,16 @@ class MusicBot(discord.Client):
         if patreon:
             if not patreon in after.roles:
                 # To prevent search through the entire audit log, limit to 1 minute in the past
-                async for entry in guild.audit_logs(action=discord.AuditLogAction.member_role_update, user=self.get_user(216303189073461248), after=(datetime.datetime.now() - datetime.datetime(2020, 11, 13))): #datetime.timedelta(minutes=1)
-                    #if entry.target == before:
-                    try:
-                        await entry.target.add_roles(patreon, reason="Auto-reassignment of patron role") #after.add_roles
+                async for entry in guild.audit_logs(action=discord.AuditLogAction.member_role_update, user=self.get_user(216303189073461248), after=(datetime.datetime.now() - datetime.timedelta(minutes=1))):
+                    if entry.target == before:
+                        try:
+                            await after.add_roles(patreon, reason="Auto-reassignment of patron role") 
 
-                    except discord.Forbidden:
-                        raise exceptions.CommandError("I don't have permission to modify a user's roles.")
+                        except discord.Forbidden:
+                            raise exceptions.CommandError("I don't have permission to modify a user's roles.")
 
-                    except discord.HTTPException:
-                        raise exceptions.CommandError("Something happened while attempting to add role.")
+                        except discord.HTTPException:
+                            raise exceptions.CommandError("Something happened while attempting to add role.")
 
     # Scans for reactions on messages. If found, checks if the reaction is on a specified message in order to determine if someone is assigning themselves a role.
     async def on_raw_reaction_add(self, payload):
