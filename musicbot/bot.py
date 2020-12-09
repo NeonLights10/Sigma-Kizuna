@@ -4230,16 +4230,16 @@ class MusicBot(discord.Client):
             if document['ruleschannel']:
                 ruleschannel = int(document['ruleschannel'])
                 #TODO: replace with a embed
-                content = discord.Embed(colour=0x1abc9c, title="Istariana vilseriol!", description="Welcome {} to the {} Discord server. Please read our <#{}>, thank you.".format(member.name, member.guild.name, ruleschannel))
-                content.set_author(name="RuRune", icon_url=self.user.avatar_url)
+                content = discord.Embed(colour=0x1abc9c, title="Istariana vilseriol!", description=f"Welcome {member.name} to the {member.guild.name} Discord server. Please read our <#{ruleschannel}>, thank you.")
+                content.set_author(name=f"{member.name}", icon_url=member.avatar_url)
                 content.set_footer(text="ALICE IN DISSONANCE | {}".format(time.ctime()))
                 content.set_thumbnail(url="https://files.s-neon.xyz/share/big-icon-512.png")
                 content.set_image(url=random.choice(welcomebanners))
                 await self.safe_send_message(member.guild.get_channel(welcomechannel), content)
                 #await self.safe_send_message(member.guild.get_channel(welcomechannel), "Istariana vilseriol <@{}>! Welcome to the {} Discord server. Please read our <#{}>, thank you.".format(member.id, member.guild.name, ruleschannel))
             else:
-                content = discord.Embed(colour=0x1abc9c, title="Istariana vilseriol!", description="Welcome {} to the {} Discord server.".format(member.name, member.guild.name))
-                content.set_author(name="RuRune", icon_url=self.user.avatar_url)
+                content = discord.Embed(colour=0x1abc9c, title="Istariana vilseriol!", description=f"Welcome {member.name} to the {member.guild.name} Discord server.")
+                content.set_author(name=f"{member.name}", icon_url=member.avatar_url)
                 content.set_footer(text="ALICE IN DISSONANCE | {}".format(time.ctime()))
                 content.set_thumbnail(url="https://files.s-neon.xyz/share/big-icon-512.png")
                 content.set_image(url=random.choice(welcomebanners))
