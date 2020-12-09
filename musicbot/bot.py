@@ -4297,7 +4297,7 @@ class MusicBot(discord.Client):
                     content = discord.Embed(colour=0x1abc9c)
                     content.set_author(name=f"{message.author.name}#{message.author.discriminator}", icon_url=message.author.avatar_url)
                     content.set_footer(text=f"UID: {message.author.id} | {time.ctime()}")
-                    content.title=f"Message deleted in {message.channel.name}"
+                    content.title=f"Message deleted in #{message.channel.name}"
                     content.description=f"**Message Content:** {cleanMessage}"
                     if len(message.attachments) > 0:
                         content.add_field(name="Attachment:", value="\u200b")
@@ -4317,7 +4317,7 @@ class MusicBot(discord.Client):
                         content = discord.Embed(colour=0x1abc9c)
                         content.set_author(name=f"{message.author.name}#{message.author.discriminator}", icon_url=message.author.avatar_url)
                         content.set_footer(text=f"UID: {message.author.id} | {time.ctime()}")
-                        content.title=f"Message deleted in {message.channel.name}"
+                        content.title=f"Message deleted in #{message.channel.name}"
                         content.description=f"**Message Content:** {cleanMessage}"
                         if len(message.attachments) > 0:
                             content.add_field(name="Attachment:", value="\u200b")
@@ -4338,7 +4338,7 @@ class MusicBot(discord.Client):
                         content = discord.Embed(colour=0x1abc9c)
                         content.set_author(name=f"{before.author.name}#{before.author.discriminator}", icon_url=before.author.avatar_url)
                         content.set_footer(text=f"UID: {before.author.id} | {time.ctime()}")
-                        content.title=f"Message edited in {before.channel.name}"
+                        content.title=f"Message edited in #{before.channel.name}"
                         content.description=f"**Before:** {cleanBeforeMessage}\n**After:** {cleanAfterMessage}"
                         await self.safe_send_message(recordChannel, content)
 
