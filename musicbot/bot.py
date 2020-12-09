@@ -4244,7 +4244,7 @@ class MusicBot(discord.Client):
                         content.description=f"**Message Content:** {cleanMessage}"
                         if len(message.attachments) > 0:
                             content.add_field(name="Attachment:", value="\u200b")
-                            content.set_image(message.attachments[0].proxy_url)
+                            content.set_image(url=message.attachments[0].proxy_url)
                         await self.safe_send_message(recordChannel, content)
         except: 
             raise Exception
@@ -4267,7 +4267,7 @@ class MusicBot(discord.Client):
                             content.description=f"**Message Content:** {cleanMessage}"
                             if len(message.attachments) > 0:
                                 content.add_field(name="Attachment:", value="\u200b")
-                                content.set_image(message.attachments[0].proxy_url)
+                                content.set_image(url=message.attachments[0].proxy_url)
                             await self.safe_send_message(recordChannel, content)
         except: pass
 
