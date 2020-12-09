@@ -4246,8 +4246,7 @@ class MusicBot(discord.Client):
                             content.add_field(name="Attachment:", value="\u200b")
                             content.set_image(url=message.attachments[0].proxy_url)
                         await self.safe_send_message(recordChannel, content)
-        except: 
-            raise Exception
+        except: pass
 
     # Logs bulk deleted messages (for purges)
     async def on_bulk_message_delete(self, messages):
