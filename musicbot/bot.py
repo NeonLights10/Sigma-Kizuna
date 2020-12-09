@@ -4294,11 +4294,15 @@ class MusicBot(discord.Client):
                 if re.match('^{}'.format(self.config.command_prefix), message.content) == None:
                     cleanMessage = re.sub('<@!?&?\d{17,18}>', '[removed mention]', message.content)
                     recordChannel = message.guild.get_channel(msglog)
-                    await self.safe_send_message(recordChannel, "**{}#{}** (ID: {}) message has been deleted from **#{}:**".format(message.author.name, message.author.discriminator, message.author.id, message.channel.name))
-                    await self.safe_send_message(recordChannel, "**Message:** {}".format(cleanMessage))
+                    content = discord.Embed(colour=0x1abc9c)
+                    content.set_author(name=f"{message.author.name}#{message.author.discriminator}", icon_url=message.author.avatar_url)
+                    content.set_footer(text=f"UID: {message.author.id} | {time.ctime()}")
+                    content.title=f"Message deleted in {message.channel.name}"
+                    content.description=f"**Message Content:** {cleanMessage}"
                     if len(message.attachments) > 0:
-                        for entry in message.attachments:
-                            await self.safe_send_message(recordChannel, "**Attachment:** {}".format(entry.proxy_url))
+                        content.add_field(name="Attachment:", value="\u200b")
+                        content.set_image(url=message.attachments[0].proxy_url)
+                    await self.safe_send_message(recordChannel, content)
 
     # Logs bulk deleted messages (for purges)
     async def on_bulk_message_delete(self, messages):
@@ -4310,11 +4314,15 @@ class MusicBot(discord.Client):
                     if re.match('^{}'.format(self.config.command_prefix), message.content) == None:
                         cleanMessage = re.sub('<@!?&?\d{17,18}>', '[removed mention]', message.content)
                         recordChannel = message.guild.get_channel(msglog)
-                        await self.safe_send_message(recordChannel, "**{}#{}** (ID: {}) message has been deleted from **#{}:**".format(message.author.name, message.author.discriminator, message.author.id, message.channel.name))
-                        await self.safe_send_message(recordChannel, "**Message:** {}".format(cleanMessage))
+                        content = discord.Embed(colour=0x1abc9c)
+                        content.set_author(name=f"{message.author.name}#{message.author.discriminator}", icon_url=message.author.avatar_url)
+                        content.set_footer(text=f"UID: {message.author.id} | {time.ctime()}")
+                        content.title=f"Message deleted in {message.channel.name}"
+                        content.description=f"**Message Content:** {cleanMessage}"
                         if len(message.attachments) > 0:
-                            for entry in message.attachments:
-                                await self.safe_send_message(recordChannel, "**Attachment:** {}".format(entry.proxy_url))
+                            content.add_field(name="Attachment:", value="\u200b")
+                            content.set_image(url=message.attachments[0].proxy_url)
+                        await self.safe_send_message(recordChannel, content)
 
     # Logs an edited message, which includes User + Discriminator, User ID, channel, message contents
     async def on_message_edit(self, before, after):
@@ -4327,9 +4335,12 @@ class MusicBot(discord.Client):
                     cleanAfterMessage = re.sub('<@!?&?\d{17,18}>', '[removed mention]', after.content)
                     recordChannel = before.guild.get_channel(msglog)
                     if recordChannel:
-                        await self.safe_send_message(recordChannel, "**{}#{}** (ID: {}) message has been edited in **#{}:**".format(before.author.name, before.author.discriminator, before.author.id, before.channel.name))
-                        await self.safe_send_message(recordChannel, "**Old Message:** {}".format(cleanBeforeMessage))
-                        await self.safe_send_message(recordChannel, "**New Message:** {}".format(cleanAfterMessage))
+                        content = discord.Embed(colour=0x1abc9c)
+                        content.set_author(name=f"{before.author.name}#{before.author.discriminator}", icon_url=before.author.avatar_url)
+                        content.set_footer(text=f"UID: {before.author.id} | {time.ctime()}")
+                        content.title=f"Message edited in {before.channel.name}"
+                        content.description=f"**Before:** {cleanBeforeMessage}\n**After:** {cleanAfterMessage}"
+                        await self.safe_send_message(recordChannel, content)
 
     # Patreon auto-reassign co-routine whenever patreonBot removes a role from a patron due to status change. All patrons maintain the role for life, which makes this necessary
     async def on_member_update(self, before, after):
