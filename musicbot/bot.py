@@ -4288,8 +4288,7 @@ class MusicBot(discord.Client):
                             content.title=f"Message edited in {before.channel.name}"
                             content.description=f"**Before:** {cleanBeforeMessage}\n**After:** {cleanAfterMessage}"
                             await self.safe_send_message(recordChannel, content)
-        except:
-            raise Exception
+        except: pass
 
     # Scans for reactions on messages. If found, checks if the reaction is on a specified message in order to determine if someone is assigning themselves a role.
     async def on_raw_reaction_add(self, payload):
